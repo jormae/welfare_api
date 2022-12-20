@@ -105,24 +105,39 @@ router.post(
 );
 
 router.put("/:nationalId", async (req, res) => {
-  const nationalId = req.params.nationalId;
-  const deptId = req.body.deptId;
-  const deptName = req.body.deptName;
-  const deptStatusId = req.body.deptStatusId;
-  const branchId = req.body.branchId;
-  const orgId = req.body.orgId;
+  const {nationalId,
+   memberName,
+   houseNo,
+   streetName,
+   villageName,
+   villageNo,
+   subDistrict,
+   district,
+   province,
+   postCode,
+   contactNo,
+   positionId,
+   salary,
+   paymentTypeId,
+   memberTypeId,
+   memberRoleId,
+   memberStatusId,
+   resignDate } = req.body;
   try {
     connection.query(
-      "UPDATE tbl_member SET deptName = ?, deptStatusId = ?, branchId = ?, orgId = ? WHERE nationalId = ?",
-      [deptName, deptStatusId, branchId, orgId, nationalId],
+      "UPDATE tbl_member SET memberName = ?, houseNo = ?, streetName = ?, villageName = ?, villageNo = ?, subDistrict = ?, "+
+      "district = ?, province = ?, postCode = ?, contactNo = ?, positionId = ?, salary = ?, paymentTypeId = ?, memberTypeId = ?, "+
+      "memberRoleId = ?, memberStatusId = ?, resignDate = ? WHERE nationalId = ? ",
+      [memberName, houseNo, streetName, villageName, villageNo, subDistrict, district, province,postCode, contactNo, positionId,
+        salary, paymentTypeId,memberTypeId, memberRoleId, memberStatusId, resignDate, nationalId],
       (err, results, fields) => {
         if (err) {
-          console.log("Error while updating a dept in database!", err);
+          console.log("Error while updating a member in database!", err);
           return res.status(400).send();
         }
         return res
           .status(200)
-          .json({ message: "The dept is successfully updated!" });
+          .json({status:'success', message: "บันทึกข้อมูลสมาชิกสำเร็จ!" });
       }
     );
   } catch (err) {

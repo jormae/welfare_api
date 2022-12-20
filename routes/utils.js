@@ -10,10 +10,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 router.get("/", (req, res) => res.send("it's utils route"));
-router.get("/discharge-status", (req, res) => {
+router.get("/positions", (req, res) => {
   try {
     const mysql =
-      "SELECT * FROM tbl_discharge_status ORDER BY dischargeStatusName ";
+      "SELECT * FROM tbl_position ORDER BY positionName ";
     connection.query(mysql, (err, results, fields) => {
       if (err) {
         console.log(err);
@@ -27,10 +27,10 @@ router.get("/discharge-status", (req, res) => {
   }
 });
 
-router.get("/discharge-type", (req, res) => {
+router.get("/member-types", (req, res) => {
   try {
     const mysql =
-      "SELECT * FROM tbl_discharge_type  ORDER BY dischargeTypeName ";
+      "SELECT * FROM tbl_member_type  ORDER BY memberTypeName ";
     connection.query(mysql, (err, results, fields) => {
       if (err) {
         console.log(err);
@@ -44,9 +44,9 @@ router.get("/discharge-type", (req, res) => {
   }
 });
 
-router.get("/doctor", (req, res) => {
+router.get("/member-roles", (req, res) => {
   try {
-    const mysql = "SELECT * FROM tbl_doctor ORDER BY doctorName ";
+    const mysql = "SELECT * FROM tbl_member_role ORDER BY memberRoleName ";
     connection.query(mysql, (err, results, fields) => {
       if (err) {
         console.log(err);
@@ -60,9 +60,9 @@ router.get("/doctor", (req, res) => {
   }
 });
 
-router.get("/pttype", (req, res) => {
+router.get("/payment-types", (req, res) => {
   try {
-    const mysql = "SELECT * FROM tbl_pttype  ORDER BY pttypeName ";
+    const mysql = "SELECT * FROM tbl_payment_type  ORDER BY paymentTypeName ";
     connection.query(mysql, (err, results, fields) => {
       if (err) {
         console.log(err);
@@ -76,9 +76,9 @@ router.get("/pttype", (req, res) => {
   }
 });
 
-router.get("/refer-cause", (req, res) => {
+router.get("/member-status", (req, res) => {
   try {
-    const mysql = "SELECT * FROM tbl_refer_cause  ORDER BY referCauseCode ";
+    const mysql = "SELECT * FROM tbl_member_status ";
     connection.query(mysql, (err, results, fields) => {
       if (err) {
         console.log(err);
