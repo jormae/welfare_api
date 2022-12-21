@@ -4,6 +4,7 @@ const res = require("express/lib/response");
 // const authRouter = require("./routes/auth");
 // const dashboardRouter = require("./routes/dashboard");
 const membersRouter = require("./routes/members");
+const spousesRouter = require("./routes/spouses");
 const investmentsRouter = require("./routes/investments");
 const utilsRouter = require("./routes/utils");
 
@@ -14,6 +15,7 @@ app.use(express.json());
 app.get("/", (req, res) => res.send("Welcome to my js api."));
 // app.use("/auth", authRouter);
 app.use("/members", membersRouter);
+app.use("/spouses", spousesRouter);
 app.use("/investments", investmentsRouter);
 app.use("/utils", utilsRouter);
 

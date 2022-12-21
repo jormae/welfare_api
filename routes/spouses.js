@@ -11,14 +11,7 @@ app.use(bodyParser.json());
 
 router.get("/", (req, res) => {
   try {
-    const mysql =
-      "SELECT *, (SELECT SUM(totalShare) FROM tbl_investment i WHERE i.nationalId = m.nationalId) AS totalInvestment " +
-      "FROM tbl_member m " +
-      "LEFT JOIN tbl_member_role mr ON mr.memberRoleId = m.memberRoleId " +
-      "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId " +
-      "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = m.paymentTypeId " +
-      "LEFT JOIN tbl_position p ON p.positionId = m.positionId " +
-      "LEFT JOIN tbl_spouse s ON s.memberNationalId = m.nationalId";
+    const mysql = "SELECT * FROM tbl_spouse ";
     connection.query(mysql, (err, results, fields) => {
       if (err) {
         console.log(err);
@@ -32,15 +25,13 @@ router.get("/", (req, res) => {
   }
 });
 
-router.get("/:nationalId", async (req, res) => {
-  const nationalId = req.params.nationalId;
+router.get("/:memberNationalId", async (req, res) => {
+  const memberNationalId = req.params.memberNationalId;
+  console.log(memberNationalId);
   try {
     connection.query(
-      "SELECT * " +
-        "FROM tbl_investment i " +
-        "LEFT JOIN tbl_investment_type it ON it.investmentTypeId = i.investmentTypeId " +
-        "WHERE nationalId = ?",
-      [nationalId],
+      "SELECT * FROM tbl_spouse WHERE memberNationalId = ?",
+      [memberNationalId],
       (err, results, fields) => {
         if (err) {
           console.log(err);
@@ -106,25 +97,57 @@ router.post(
   }
 );
 
-router.put("/:nationalId", async (req, res) => {
-  const nationalId = req.params.nationalId;
-  const deptId = req.body.deptId;
-  const deptName = req.body.deptName;
-  const deptStatusId = req.body.deptStatusId;
-  const branchId = req.body.branchId;
-  const orgId = req.body.orgId;
+router.put("/:memberNationalId", async (req, res) => {
+  const memberNationalId = req.params.memberNationalId;
+  console.log(memberNationalId);
+  const {
+    spouseNationalId,
+    spouseName,
+    houseNo,
+    streetName,
+    villageName,
+    villageNo,
+    subDistrict,
+    district,
+    province,
+    postCode,
+    contactNo,
+    updateAt,
+    updateBy,
+  } = req.body;
   try {
     connection.query(
-      "UPDATE tbl_member SET deptName = ?, deptStatusId = ?, branchId = ?, orgId = ? WHERE nationalId = ?",
-      [deptName, deptStatusId, branchId, orgId, nationalId],
+      "UPDATE tbl_spouse SET  spouseNationalId = ?, spouseName = ?, houseNo = ?, streetName = ?, villageName = ?, " +
+        "villageNo = ?,  subDistrict = ?,  district = ?,  province = ?,  postCode = ?, contactNo = ?, updateAt = ?, updateBy = ? " +
+        "WHERE memberNationalId = ?",
+      [
+        spouseNationalId,
+        spouseName,
+        houseNo,
+        streetName,
+        villageName,
+        villageNo,
+        subDistrict,
+        district,
+        province,
+        postCode,
+        contactNo,
+        updateAt,
+        updateBy,
+        memberNationalId,
+      ],
       (err, results, fields) => {
         if (err) {
-          console.log("Error while updating a dept in database!", err);
-          return res.status(400).send();
+          // console.log("Error while updating a spause in database!", err);
+          // return res.status(400).send();
+          return res.status(400).json({
+            status: "error",
+            message: "บันทึกข้อมูลคู่สมรสล้มเหลว กรุณาติดต่อผู้ดูแลระบบ!",
+          });
         }
         return res
           .status(200)
-          .json({ message: "The dept is successfully updated!" });
+          .json({ status: "success", message: "บันทึกข้อมูลคู่สมรสสำเร็จ!" });
       }
     );
   } catch (err) {
