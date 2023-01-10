@@ -6,6 +6,7 @@ const res = require("express/lib/response");
 const membersRouter = require("./routes/members");
 const spousesRouter = require("./routes/spouses");
 const investmentsRouter = require("./routes/investments");
+const loansRouter = require("./routes/loans");
 const utilsRouter = require("./routes/utils");
 
 const app = express();
@@ -17,6 +18,7 @@ app.get("/", (req, res) => res.send("Welcome to my js api."));
 app.use("/members", membersRouter);
 app.use("/spouses", spousesRouter);
 app.use("/investments", investmentsRouter);
+app.use("/loans", loansRouter);
 app.use("/utils", utilsRouter);
 
 app.listen(3030, () => console.log("Server is running on port 3030"));
