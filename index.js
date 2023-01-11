@@ -7,6 +7,7 @@ const membersRouter = require("./routes/members");
 const spousesRouter = require("./routes/spouses");
 const investmentsRouter = require("./routes/investments");
 const loansRouter = require("./routes/loans");
+const dividendsRouter = require("./routes/dividends");
 const utilsRouter = require("./routes/utils");
 
 const app = express();
@@ -19,6 +20,7 @@ app.use("/members", membersRouter);
 app.use("/spouses", spousesRouter);
 app.use("/investments", investmentsRouter);
 app.use("/loans", loansRouter);
+app.use("/dividends", dividendsRouter);
 app.use("/utils", utilsRouter);
 
 app.listen(3030, () => console.log("Server is running on port 3030"));
