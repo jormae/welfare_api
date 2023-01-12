@@ -32,17 +32,43 @@ router.get("/", (req, res) => {
   }
 });
 
-router.get("/:nationalId", async (req, res) => {
+router.get("/members/:nationalId", async (req, res) => {
   const nationalId = req.params.nationalId;
   try {
     connection.query(
       "SELECT *, " +
-      "(SELECT SUM(paymentAmount) FROM tbl_loan_payment lp WHERE nationalId = ? AND lp.loanId = l.loanId) AS totalPayment "+
+        "(SELECT SUM(paymentAmount) FROM tbl_loan_payment lp WHERE nationalId = ? AND lp.loanId = l.loanId) AS totalPayment " +
         "FROM tbl_loan l " +
         "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId " +
         "LEFT JOIN tbl_loan_status ls ON ls.loanStatusId = l.loanStatusId " +
         "WHERE nationalId = ?",
       [nationalId, nationalId],
+      (err, results, fields) => {
+        if (err) {
+          console.log(err);
+          return res.status(400).send();
+        }
+        res.status(200).json(results);
+      }
+    );
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
+router.get("/loan-history/:nationalId/:loanId", async (req, res) => {
+  const nationalId = req.params.nationalId;
+  const loanId = req.params.loanId;
+  try {
+    connection.query(
+      "SELECT * " +
+        "FROM tbl_loan l " +
+        "LEFT JOIN tbl_loan_payment lp ON lp.loanId = l.loanId " +
+        "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = lp.paymentTypeId " +
+        "WHERE nationalId = ? " +
+        "AND l.loanId = ?",
+      [nationalId, loanId],
       (err, results, fields) => {
         if (err) {
           console.log(err);
