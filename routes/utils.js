@@ -92,26 +92,10 @@ router.get("/member-status", (req, res) => {
   }
 });
 
-router.get("/refer-hospital", (req, res) => {
+router.get("/loan-types", (req, res) => {
   try {
     const mysql =
-      "SELECT * FROM tbl_refer_hospital  ORDER BY referHospitalCode ";
-    connection.query(mysql, (err, results, fields) => {
-      if (err) {
-        console.log(err);
-        return res.status(400).send();
-      }
-      res.status(200).json(results);
-    });
-  } catch (err) {
-    console.log(err);
-    return res.status(500).send();
-  }
-});
-
-router.get("/ward", (req, res) => {
-  try {
-    const mysql = "SELECT * FROM tbl_ward  ORDER BY wardName ";
+      "SELECT * FROM tbl_loan_type  ORDER BY loanTypeName, loanAmount  ";
     connection.query(mysql, (err, results, fields) => {
       if (err) {
         console.log(err);

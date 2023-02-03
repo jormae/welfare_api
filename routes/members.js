@@ -17,7 +17,7 @@ router.get("/", (req, res) => {
     "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId "+
     "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = m.paymentTypeId "+
     "LEFT JOIN tbl_position p ON p.positionId = m.positionId "+
-    "LEFT JOIN tbl_spouse s ON s.memberNationalId = m.nationalId";
+    "LEFT JOIN tbl_spouse s ON s.memberNationalId = m.nationalId LIMIT 10";
     connection.query(
       mysql, (err, results, fields) => {
       if (err) {
@@ -37,7 +37,14 @@ router.get("/:nationalId", async (req, res) => {
   const nationalId = req.params.nationalId;
   try {
     connection.query(
-      "SELECT * FROM tbl_member WHERE nationalId = ?",
+      "SELECT * "+
+      "FROM tbl_member m "+
+      "LEFT JOIN tbl_member_role mr ON mr.memberRoleId = m.memberRoleId "+
+      "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId "+
+      "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = m.paymentTypeId "+
+      "LEFT JOIN tbl_position p ON p.positionId = m.positionId "+
+      "LEFT JOIN tbl_spouse s ON s.memberNationalId = m.nationalId "+
+      "WHERE m.nationalId = ?",
       [nationalId],
       (err, results, fields) => {
         if (err) {
