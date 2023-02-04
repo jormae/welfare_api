@@ -41,12 +41,39 @@ router.get("/request", (req, res) => {
     "FROM tbl_loan l " +
     "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId "+
     "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId "+
-    "LEFT JOIN tbl_loan_payment lp ON lp.loanId = l.loanId " +
-    "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = lp.paymentTypeId " +
+    "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = m.paymentTypeId " +
     "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId " +
     "LEFT JOIN tbl_position p ON p.positionId = m.positionId " +
     "WHERE loanRequestStatusId = 0 ";
     connection.query(mysql, (err, results, fields) => {
+      if (err) {
+        console.log(err);
+        return res.status(400).send();
+      }
+      res.status(200).json(results);
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
+router.get("/request/:nationalId", (req, res) => {
+  const nationalId = req.params.nationalId;
+  try {
+    const mysql =
+    "SELECT *, m1.memberName AS firstReferenceName, m1.contactNo AS firstReferenceContactNo, m2.memberName AS secondReferenceName, m2.contactNo AS secondReferenceContactNo, " +
+    "m.memberName AS loanMemberName "+
+    "FROM tbl_loan l " +
+    "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId "+
+    "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId "+
+    "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = m.paymentTypeId " +
+    "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId " +
+    "LEFT JOIN tbl_position p ON p.positionId = m.positionId " +
+    "LEFT JOIN tbl_member m1 ON m1.nationalId = l.firstReferenceId "+
+    "LEFT JOIN tbl_member m2 ON m2.nationalId = l.secondReferenceId "+
+    "WHERE l.nationalId = ?";
+    connection.query(mysql,[nationalId], (err, results, fields) => {
       if (err) {
         console.log(err);
         return res.status(400).send();
@@ -89,7 +116,7 @@ router.get("/loan-history/:nationalId/:loanId", async (req, res) => {
   const loanId = req.params.loanId;
   try {
     connection.query(
-      "SELECT * " +
+      "SELECT lp.*, pt.*  " +
       "FROM tbl_loan_payment lp  "+
       "LEFT JOIN tbl_loan l ON lp.loanId = l.loanId "+
       "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = lp.paymentTypeId  " +
@@ -114,7 +141,7 @@ router.get("/payment-suggestion/:nationalId", async (req, res) => {
   const nationalId = req.params.nationalId;
   try {
     connection.query(
-      " SELECT lp.loanId, DATE_ADD(loanPaymentMonth, INTERVAL 1 MONTH) AS loanPaymentMonth, monthNo + 1 AS monthNo, paymentAmount, lp.paymentTypeId, l.nationalId, memberName "+  
+      " SELECT lp.loanId, DATE_ADD(loanPaymentMonth, INTERVAL 1 MONTH) AS loanPaymentMonth, monthNo + 1 AS monthNo, paymentAmount, lp.paymentTypeId, l.nationalId, memberName, refId "+  
       "FROM tbl_loan_payment lp  "+
       "LEFT JOIN tbl_loan l ON lp.loanId = l.loanId  "+
       "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId "+
@@ -187,13 +214,9 @@ async (req, res) => {
   }
 );
 
-router.put("/:nationalId", async (req, res) => {
-  const nationalId = req.params.nationalId;
-  const deptId = req.body.deptId;
-  const deptName = req.body.deptName;
-  const deptStatusId = req.body.deptStatusId;
-  const branchId = req.body.branchId;
-  const orgId = req.body.orgId;
+router.put("/:loanId", async (req, res) => {
+  const loanId = req.params.loanId;
+  const { userName, loanStatusId, refId } = req.body;
   try {
     connection.query(
       "UPDATE tbl_member SET deptName = ?, deptStatusId = ?, branchId = ?, orgId = ? WHERE nationalId = ?",
