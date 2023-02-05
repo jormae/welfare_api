@@ -216,19 +216,20 @@ async (req, res) => {
 
 router.put("/:loanId", async (req, res) => {
   const loanId = req.params.loanId;
-  const { userName, loanStatusId, refId } = req.body;
+  const { userName, loanRequestStatusId, refId } = req.body;
+  const approvedAt =  moment().format('YYYY-MM-DD H:m:s');
   try {
     connection.query(
-      "UPDATE tbl_member SET deptName = ?, deptStatusId = ?, branchId = ?, orgId = ? WHERE nationalId = ?",
-      [deptName, deptStatusId, branchId, orgId, nationalId],
+      "UPDATE tbl_loan SET loanRequestStatusId = ?, refId = ?, approvedBy = ?, approvedAt = ? WHERE loanId = ? ",
+      [loanRequestStatusId, refId, userName, approvedAt, loanId],
       (err, results, fields) => {
         if (err) {
-          console.log("Error while updating a dept in database!", err);
+          console.log("Error while updating loan approval in database!", err);
           return res.status(400).send();
         }
         return res
           .status(200)
-          .json({ message: "The dept is successfully updated!" });
+          .json({ status: "success", message: "บันทึกข้อมูลการอนุมัติคำร้องขอสวัสดิการเรียบร้อยแล้ว!" });
       }
     );
   } catch (err) {

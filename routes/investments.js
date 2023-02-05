@@ -3,6 +3,8 @@ const connection = require("../config/database-connection");
 const router = express.Router();
 const bodyParser = require("body-parser");
 const { body, validationResult } = require("express-validator");
+const moment = require("moment-timezone");
+moment.tz.setDefault("Asia/Bangkok");
 
 const app = express();
 app.use(express.json());
@@ -56,39 +58,26 @@ router.get("/:nationalId", async (req, res) => {
 });
 
 // post
-router.post(
-  "/",
-  body("deptName", "orgId").custom((value, { req }) => {
-    return new Promise((resolve, reject) => {
-      const deptName = req.body.deptName;
-      const orgId = req.body.orgId;
-      connection.query(
-        "SELECT deptName FROM tbl_dept WHERE deptName = ? AND orgId = ?",
-        [deptName, orgId],
-        (err, res) => {
-          if (err) {
-            reject(new Error("Server Error"));
-          }
-          if (res.length > 0) {
-            reject(new Error("dept name is already existed!"));
-          }
-          resolve(true);
-        }
-      );
-    });
-  }),
-  async (req, res) => {
-    const { deptName, deptStatusId, branchId, orgId } = req.body;
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        errors: errors.array(),
-      });
+router.post("/", async (req, res) => {
+
+  const { investmentTypeId, nationalId,  shareQuantity, valuePerShare, username } = req.body;
+  const totalShare = shareQuantity * valuePerShare
+  const datetime =  moment().format('YYYY-MM-DD H:m:s');
+
+  let strShareQuantity, strTotalShare;
+    if(investmentTypeId == 1){
+       strShareQuantity = shareQuantity
+       strTotalShare = shareQuantity * valuePerShare
     }
+    else{
+       strShareQuantity = '-'+shareQuantity
+       strTotalShare = '-'+shareQuantity * valuePerShare
+    }
+
     try {
       connection.query(
-        "INSERT INTO tbl_dept(deptName, deptStatusId, branchId, orgId) VALUES (?,?,?,?)",
-        [deptName, deptStatusId, branchId, orgId],
+        "INSERT INTO tbl_investment(investmentTypeId, shareQuantity, valuePerShare, totalShare, nationalId, investmentDateTime, createdAt, createdBy) VALUES (?,?,?,?,?,?,?,?)",
+        [investmentTypeId, strShareQuantity, valuePerShare, strTotalShare, nationalId, datetime, datetime, username],
         (err, results, fields) => {
           if (err) {
             console.log("Error while inserting a dept into database!", err);
@@ -96,7 +85,7 @@ router.post(
           }
           return res
             .status(201)
-            .json({ message: "New dept is successfully created!" });
+            .json({ status: 'success', message: "บันทึกข้อมูลการเพิ่ม/ถอน/ลา หุ้น เรียบร้อยแล้ว!" });
         }
       );
     } catch (err) {
