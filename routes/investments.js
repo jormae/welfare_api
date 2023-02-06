@@ -57,6 +57,29 @@ router.get("/:nationalId", async (req, res) => {
   }
 });
 
+router.get("/summary/:nationalId", async (req, res) => {
+  const nationalId = req.params.nationalId;
+  try {
+    connection.query(
+     "SELECT i.nationalId, memberName, SUM(shareQuantity) AS totalShareQuantity, SUM(totalShare) AS totalShare "+ 
+        "FROM tbl_investment i  "+
+        "LEFT JOIN tbl_member m ON m.nationalId = i.nationalId  "+
+        "WHERE i.nationalId = ?",
+      [nationalId],
+      (err, results, fields) => {
+        if (err) {
+          console.log(err);
+          return res.status(400).send();
+        }
+        res.status(200).json(results);
+      }
+    );
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
 // post
 router.post("/", async (req, res) => {
 
