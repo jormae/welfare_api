@@ -63,19 +63,18 @@ router.get("/:nationalId", async (req, res) => {
 // post
 router.post(
   "/",
-  body("deptName", "orgId").custom((value, { req }) => {
+  body("nationalId").custom((value, { req }) => {
     return new Promise((resolve, reject) => {
-      const deptName = req.body.deptName;
-      const orgId = req.body.orgId;
+      const nationalId = req.body.nationalId;
       connection.query(
-        "SELECT deptName FROM tbl_dept WHERE deptName = ? AND orgId = ?",
-        [deptName, orgId],
+        "SELECT nationalId FROM tbl_member WHERE nationalId = ? ",
+        [nationalId],
         (err, res) => {
           if (err) {
             reject(new Error("Server Error"));
           }
           if (res.length > 0) {
-            reject(new Error("dept name is already existed!"));
+            reject(new Error("nationalId is already existed!"));
           }
           resolve(true);
         }
@@ -83,7 +82,23 @@ router.post(
     });
   }),
   async (req, res) => {
-    const { deptName, deptStatusId, branchId, orgId } = req.body;
+    const {nationalId,
+      memberName,
+      houseNo,
+      streetName,
+      villageName,
+      villageNo,
+      subDistrict,
+      district,
+      province,
+      postCode,
+      contactNo,
+      positionId,
+      salary,
+      paymentTypeId,
+      memberTypeId,
+      memberRoleId,
+      memberStatusId} = req.body;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -92,16 +107,20 @@ router.post(
     }
     try {
       connection.query(
-        "INSERT INTO tbl_dept(deptName, deptStatusId, branchId, orgId) VALUES (?,?,?,?)",
-        [deptName, deptStatusId, branchId, orgId],
+        "INSERT INTO tbl_member(memberName, houseNo, streetName, villageName, villageNo, "+
+        "subDistrict, district, province,postCode, contactNo, positionId, "+
+        "salary, paymentTypeId,memberTypeId, memberRoleId, memberStatusId, nationalId) "+
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        [memberName, houseNo, streetName, villageName, villageNo, subDistrict, district, province,postCode, contactNo, positionId,
+          salary, paymentTypeId,memberTypeId, memberRoleId, memberStatusId, nationalId],
         (err, results, fields) => {
           if (err) {
-            console.log("Error while inserting a dept into database!", err);
+            console.log("Error while inserting a member into database!", err);
             return res.status(400).send();
           }
           return res
             .status(201)
-            .json({ message: "New dept is successfully created!" });
+            .json({ status: "success", message: "บันทึกการเพิ่มสมาชิกใหม่เรียบร้อยแล้ว!" });
         }
       );
     } catch (err) {
