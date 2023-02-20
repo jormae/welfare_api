@@ -34,6 +34,33 @@ router.get("/", (req, res) => {
   }
 });
 
+router.get("/active", (req, res) => {
+  try {
+    const mysql =
+    "SELECT approvedAt, memberName, positionName, memberTypeName, loanTypeName, loanAmount, loanStatusName, loanDurationInMonth, monthlyPayment, (loanAmount - (if(loanBalance IS NOT NULL, loanBalance, 0))) AS loanBalance "+
+    "FROM"+
+    "(SELECT l.approvedAt, memberName, positionName, memberTypeName, loanTypeName, loanAmount, loanStatusName, loanDurationInMonth, monthlyPayment, "+
+    "(SELECT SUM(paymentAmount) FROM tbl_loan_payment lp WHERE lp.loanId = l.loanId) AS loanBalance "+
+    "FROM tbl_loan l "+
+    "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId "+
+    "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId "+
+    "LEFT JOIN tbl_loan_status ls ON ls.loanStatusId = l.loanStatusId "+
+    "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId "+
+    "LEFT JOIN tbl_position p ON p.positionId = m.positionId "+
+    "WHERE l.loanStatusId = 1 ) AS x";
+    connection.query(mysql, (err, results, fields) => {
+      if (err) {
+        console.log(err);
+        return res.status(400).send();
+      }
+      res.status(200).json(results);
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
 router.get("/request", (req, res) => {
   try {
     const mysql =
@@ -86,6 +113,31 @@ router.get("/request/:nationalId", (req, res) => {
   }
 });
 
+router.get("/follow-up", (req, res) => {
+  try {
+    const mysql =
+    "SELECT * " +
+    "FROM tbl_loan l " +
+    "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId "+
+    "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId "+
+    "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = m.paymentTypeId " +
+    "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId " +
+    "LEFT JOIN tbl_position p ON p.positionId = m.positionId " +
+    "WHERE loanStatusId = 1 "+
+    "AND m.memberStatus = 0";
+    connection.query(mysql, (err, results, fields) => {
+      if (err) {
+        console.log(err);
+        return res.status(400).send();
+      }
+      res.status(200).json(results);
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
 router.get("/members/:nationalId", async (req, res) => {
   const nationalId = req.params.nationalId;
   try {
@@ -123,6 +175,34 @@ router.get("/loan-history/:nationalId/:loanId", async (req, res) => {
       "WHERE nationalId = ? " +
       "AND l.loanId = ?",
       [nationalId, loanId],
+      (err, results, fields) => {
+        if (err) {
+          console.log(err);
+          return res.status(400).send();
+        }
+        res.status(200).json(results);
+      }
+    );
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
+router.get("/surety/:nationalId", async (req, res) => {
+  const nationalId = req.params.nationalId;
+  try {
+    connection.query(
+      "SELECT approvedAt, memberName, loanTypeName, loanAmount, loanStatusName, loanDurationInMonth, monthlyPayment, (loanAmount - (if(loanBalance IS NOT NULL, loanBalance, 0))) AS loanBalance "+
+      "FROM"+
+      "(SELECT l.approvedAt, memberName, loanTypeName, loanAmount, loanStatusName, loanDurationInMonth, monthlyPayment, "+
+      "(SELECT SUM(paymentAmount) FROM tbl_loan_payment lp WHERE lp.loanId = l.loanId) AS loanBalance "+
+      "FROM tbl_loan l "+
+      "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId "+
+      "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId "+
+      "LEFT JOIN tbl_loan_status ls ON ls.loanStatusId = l.loanStatusId "+
+      "WHERE (firstReferenceId = ? OR secondReferenceId = ?) ) AS x",
+      [nationalId, nationalId],
       (err, results, fields) => {
         if (err) {
           console.log(err);
@@ -216,12 +296,12 @@ async (req, res) => {
 
 router.put("/:loanId", async (req, res) => {
   const loanId = req.params.loanId;
-  const { userName, loanRequestStatusId, refId } = req.body;
+  const { approvedBy, loanRequestStatusId, refId } = req.body;
   const approvedAt =  moment().format('YYYY-MM-DD H:m:s');
   try {
     connection.query(
-      "UPDATE tbl_loan SET loanRequestStatusId = ?, refId = ?, approvedBy = ?, approvedAt = ? WHERE loanId = ? ",
-      [loanRequestStatusId, refId, userName, approvedAt, loanId],
+      "UPDATE tbl_loan SET loanRequestStatusId = ?, refId = ?, approvedBy = ?, approvedAt = ?, loanStatusId = ? WHERE loanId = ? ",
+      [loanRequestStatusId, refId, approvedBy, approvedAt, loanRequestStatusId, loanId],
       (err, results, fields) => {
         if (err) {
           console.log("Error while updating loan approval in database!", err);

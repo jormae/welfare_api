@@ -86,6 +86,28 @@ router.get("/totalQueueLoan", (req, res) => {
   }
 });
 
+router.get("/totalFollowUpLoan", (req, res) => {
+  try {
+    const mysql =
+      "SELECT COUNT(*) AS totalFollowUpLoan " +
+      "FROM tbl_loan l " +
+      "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId"
+      "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId " +
+      "WHERE l.loanStatusId = 1 "+
+      "AND memberStatusId = 0";
+    connection.query(mysql, (err, results, fields) => {
+      if (err) {
+        console.log(err);
+        return res.status(400).send();
+      }
+      res.status(200).json(results);
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
 router.get("/totalMember", (req, res) => {
   try {
     const mysql =

@@ -49,19 +49,18 @@ router.get("/:memberNationalId", async (req, res) => {
 // post
 router.post(
   "/",
-  body("deptName", "orgId").custom((value, { req }) => {
+  body("spouseNationalId").custom((value, { req }) => {
     return new Promise((resolve, reject) => {
-      const deptName = req.body.deptName;
-      const orgId = req.body.orgId;
+      const spouseNationalId = req.body.spouseNationalId;
       connection.query(
-        "SELECT deptName FROM tbl_dept WHERE deptName = ? AND orgId = ?",
-        [deptName, orgId],
+        "SELECT spouseNationalId FROM tbl_spouse WHERE spouseNationalId = ?",
+        [spouseNationalId],
         (err, res) => {
           if (err) {
             reject(new Error("Server Error"));
           }
           if (res.length > 0) {
-            reject(new Error("dept name is already existed!"));
+            reject(new Error("เลขทีบัตรประชาชนคู่สมรสซ้ำ กรุณาลองใหม่อีกครั้ง!"));
           }
           resolve(true);
         }
@@ -69,7 +68,22 @@ router.post(
     });
   }),
   async (req, res) => {
-    const { deptName, deptStatusId, branchId, orgId } = req.body;
+    const { 
+      spouseNationalId,
+        spouseName,
+        spouseOccupation,
+        spouseIncome,
+        spouseHouseNo,
+        spouseStreetName,
+        spouseVillageName,
+        spouseVillageNo,
+        spouseSubDistrict,
+        spouseDistrict,
+        spouseProvince,
+        spousePostCode,
+        spouseContactNo,
+        memberNationalId
+     } = req.body;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -78,8 +92,26 @@ router.post(
     }
     try {
       connection.query(
-        "INSERT INTO tbl_dept(deptName, deptStatusId, branchId, orgId) VALUES (?,?,?,?)",
-        [deptName, deptStatusId, branchId, orgId],
+        "INSERT INTO tbl_spouse(spouseNationalId, spouseName, spouseOccupation, spouseIncome, spouseHouseNo, "+
+          "spouseStreetName, spouseVillageName, spouseVillageNo, spouseSubDistrict, spouseDistrict, "+
+          "spouseProvince, spousePostCode, spouseContactNo, memberNationalId) "+
+          "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,)",
+        [
+          spouseNationalId,
+          spouseName,
+          spouseOccupation,
+          spouseIncome,
+          spouseHouseNo,
+          spouseStreetName,
+          spouseVillageName,
+          spouseVillageNo,
+          spouseSubDistrict,
+          spouseDistrict,
+          spouseProvince,
+          spousePostCode,
+          spouseContactNo,
+          memberNationalId
+        ],
         (err, results, fields) => {
           if (err) {
             console.log("Error while inserting a dept into database!", err);
@@ -87,7 +119,7 @@ router.post(
           }
           return res
             .status(201)
-            .json({ message: "New dept is successfully created!" });
+            .json({ status: "success", message: "บันทึกการเพิ่มข้อมูลคู่สมรสเรียบร้อยแล้ว!" });
         }
       );
     } catch (err) {
@@ -103,42 +135,46 @@ router.put("/:memberNationalId", async (req, res) => {
   const {
     spouseNationalId,
     spouseName,
-    houseNo,
-    streetName,
-    villageName,
-    villageNo,
-    subDistrict,
-    district,
-    province,
-    postCode,
-    contactNo,
+    spouseOccupation,
+    spouseIncome,
+    spouseHouseNo,
+    spouseStreetName,
+    spouseVillageName,
+    spouseVillageNo,
+    spouseSubDistrict,
+    spouseDistrict,
+    spouseProvince,
+    spousePostCode,
+    spouseContactNo,
     updateAt,
     updateBy,
   } = req.body;
   try {
     connection.query(
-      "UPDATE tbl_spouse SET  spouseNationalId = ?, spouseName = ?, houseNo = ?, streetName = ?, villageName = ?, " +
-        "villageNo = ?,  subDistrict = ?,  district = ?,  province = ?,  postCode = ?, contactNo = ?, updateAt = ?, updateBy = ? " +
+      "UPDATE tbl_spouse SET  spouseNationalId = ?, spouseName = ?, spouseOccupation = ?, spouseIncome = ?, spouseHouseNo = ?, spouseStreetName = ?, spouseVillageName = ?, " +
+        "spouseVillageNo = ?,  spouseSubDistrict = ?,  spouseDistrict = ?,  spouseProvince = ?,  spousePostCode = ?, spouseContactNo = ?, updateAt = ?, updateBy = ? " +
         "WHERE memberNationalId = ?",
       [
         spouseNationalId,
         spouseName,
-        houseNo,
-        streetName,
-        villageName,
-        villageNo,
-        subDistrict,
-        district,
-        province,
-        postCode,
-        contactNo,
+        spouseOccupation,
+        spouseIncome,
+        spouseHouseNo,
+        spouseStreetName,
+        spouseVillageName,
+        spouseVillageNo,
+        spouseSubDistrict,
+        spouseDistrict,
+        spouseProvince,
+        spousePostCode,
+        spouseContactNo,
         updateAt,
         updateBy,
         memberNationalId,
       ],
       (err, results, fields) => {
         if (err) {
-          // console.log("Error while updating a spause in database!", err);
+          // console.log("Error while updating a spouse in database!", err);
           // return res.status(400).send();
           return res.status(400).json({
             status: "error",

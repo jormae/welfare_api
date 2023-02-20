@@ -47,14 +47,14 @@ router.post("/signup", jsonParser, function (req, res, next) {
 });
 
 router.post("/signin", jsonParser, function (req, res, next) {
-  let email = req.body.email;
+  let nationalId = req.body.username;
   let password = req.body.password;
 
   try {
     bcrypt.hash(password, saltRounds, function (err, hash) {
       connection.query(
-        "SELECT * FROM tbl_user u LEFT JOIN tbl_user_type ut ON ut.userTypeId = u.userTypeId WHERE email = ? ",
-        [email],
+        "SELECT * FROM tbl_member m LEFT JOIN tbl_member_role mr ON mr.memberRoleId = m.memberRoleId WHERE nationalId = ? ",
+        [nationalId],
         (err, users, fields) => {
           if (err) {
             console.log("Error while getting user info!", err);
@@ -66,7 +66,7 @@ router.post("/signin", jsonParser, function (req, res, next) {
           //   console.log(users);
           bcrypt.compare(password, users[0].password, function (err, isLogin) {
             if (isLogin) {
-              let token = jwt.sign({ email: users[0].email }, secret, {
+              let token = jwt.sign({ nationalId: users[0].nationalId }, secret, {
                 expiresIn: "1h",
               });
               //   return res.status(200).json({
@@ -77,8 +77,10 @@ router.post("/signin", jsonParser, function (req, res, next) {
               res.json({
                 status: "success",
                 message: "Sign in successfully!",
-                staffName: users[0].staffName,
-                userTypeName: users[0].userTypeName,
+                username: users[0].nationalId,
+                memberName: users[0].memberName,
+                memberRoleId: users[0].memberRoleId,
+                memberRoleName: users[0].memberRoleName,
                 token,
               });
             } else {

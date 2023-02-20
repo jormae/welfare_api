@@ -3,6 +3,7 @@ const connection = require("../config/database-connection");
 const router = express.Router();
 const bodyParser = require("body-parser");
 const { body, validationResult } = require("express-validator");
+const { query } = require("express");
 
 const app = express();
 app.use(express.json());
@@ -17,7 +18,7 @@ router.get("/", (req, res) => {
     "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId "+
     "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = m.paymentTypeId "+
     "LEFT JOIN tbl_position p ON p.positionId = m.positionId "+
-    "LEFT JOIN tbl_spouse s ON s.memberNationalId = m.nationalId LIMIT 10";
+    "LEFT JOIN tbl_spouse s ON s.memberNationalId = m.nationalId ";
     connection.query(
       mysql, (err, results, fields) => {
       if (err) {
@@ -118,6 +119,7 @@ router.post(
             console.log("Error while inserting a member into database!", err);
             return res.status(400).send();
           }
+          connection.query("INSERT INTO tbl_spouse(memberNationalId) VALUES (?)", nationalId);
           return res
             .status(201)
             .json({ status: "success", message: "บันทึกการเพิ่มสมาชิกใหม่เรียบร้อยแล้ว!" });
