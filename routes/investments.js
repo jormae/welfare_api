@@ -34,13 +34,14 @@ router.get("/", (req, res) => {
   }
 });
 
-router.get("/:nationalId", async (req, res) => {
+router.get("/history/:nationalId", async (req, res) => {
   const nationalId = req.params.nationalId;
   try {
     connection.query(
       "SELECT * " +
         "FROM tbl_investment i " +
         "LEFT JOIN tbl_investment_type it ON it.investmentTypeId = i.investmentTypeId " +
+        "LEFT JOIN tbl_investment_status s ON s.investmentStatusId = i.investmentStatusId "+
         "WHERE nationalId = ?",
       [nationalId],
       (err, results, fields) => {
@@ -51,6 +52,30 @@ router.get("/:nationalId", async (req, res) => {
         res.status(200).json(results);
       }
     );
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
+router.get("/request", async (req, res) => {
+  try {
+    const mysql =
+    "SELECT * "+ 
+    "FROM tbl_investment i  "+
+    "LEFT JOIN tbl_member m ON m.nationalId = i.nationalId  "+
+    "LEFT JOIN tbl_investment_status s ON s.investmentStatusId = i.investmentStatusId "+
+    "LEFT JOIN tbl_member_role mr ON mr.memberRoleId = m.memberRoleId " +
+    "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId " +
+    "LEFT JOIN tbl_position p ON p.positionId = m.positionId " +
+    "WHERE i.investmentStatusId = 0";
+    connection.query(mysql, (err, results, fields) => {
+      if (err) {
+        console.log(err);
+        return res.status(400).send();
+      }
+      res.status(200).json(results);
+    });
   } catch (err) {
     console.log(err);
     return res.status(500).send();
