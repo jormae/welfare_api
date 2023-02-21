@@ -72,7 +72,7 @@ router.get("/totalQueueLoan", (req, res) => {
       "SELECT COUNT(*) AS totalQueueLoan " +
       "FROM tbl_loan l " +
       "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId " +
-      "WHERE l.loanRequestStatusId = 0";
+      "WHERE l.loanStatusId = 0";
     connection.query(mysql, (err, results, fields) => {
       if (err) {
         console.log(err);

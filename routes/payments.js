@@ -81,8 +81,10 @@ body("loanId","loanPaymentMonth").custom((value, { req }) => {
   });
 }),
 async (req, res) => {
-    const { nationalId, loanId, loanPaymentMonth, monthNo, paymentAmount, paymentTypeId } = req.body;
-    const createdAt =  moment().format('YYYY-MM-DD H:i:s');
+    const { nationalId, loanId, loanPaymentMonth, monthNo, paymentAmount, paymentTypeId, userName, memberRoleId } = req.body;
+    const datetime =  moment().format('YYYY-MM-DD H:i:s');
+    const approvedAt = (memberRoleId != 4) ? datetime : null
+    const approvedBy = (memberRoleId != 4) ? userName : null
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -92,8 +94,8 @@ async (req, res) => {
     }
     try {
       connection.query(
-        "INSERT INTO tbl_loan_payment(createdBy, loanId, loanPaymentMonth, monthNo, paymentAmount, paymentTypeId, createdAt) VALUES (?,?,?,?,?,?,?)",
-        [nationalId, loanId, loanPaymentMonth, monthNo, paymentAmount, paymentTypeId, createdAt],
+        "INSERT INTO tbl_loan_payment(loanId, loanPaymentMonth, monthNo, paymentAmount, paymentTypeId, createdAt, createdBy, approvedAt, approvedBy) VALUES (?,?,?,?,?,?,?,?,?)",
+        [loanId, loanPaymentMonth, monthNo, paymentAmount, paymentTypeId, datetime, userName, approvedAt, approvedBy],
         (err, results, fields) => {
           if (err) {
             console.log("Error :: บันทึกข้อมูลการชำระเงินสวัสดิการล้มเหลว!", err);
