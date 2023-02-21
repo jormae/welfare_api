@@ -105,12 +105,40 @@ router.get("/summary/:nationalId", async (req, res) => {
   }
 });
 
+router.get("/detail/:investmentId", async (req, res) => {
+  const investmentId = req.params.investmentId;
+  try {
+    connection.query(
+     "SELECT *, "+ 
+     "(SELECT SUM(shareQuantity) FROM tbl_investment ii WHERE ii.nationalId = m.nationalId) AS netTotalShareQuantity, "+
+     "(SELECT SUM(totalShare) FROM tbl_investment ii WHERE ii.nationalId = m.nationalId) AS netTotalShare "+
+        "FROM tbl_investment i  "+
+        "LEFT JOIN tbl_member m ON m.nationalId = i.nationalId  "+
+        "WHERE i.investmentId = ?",
+      [investmentId],
+      (err, results, fields) => {
+        if (err) {
+          console.log(err);
+          return res.status(400).send();
+        }
+        res.status(200).json(results);
+      }
+    );
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
 // post
 router.post("/", async (req, res) => {
 
-  const { investmentTypeId, nationalId,  shareQuantity, valuePerShare, username } = req.body;
-  const totalShare = shareQuantity * valuePerShare
+  const { investmentTypeId, nationalId,  shareQuantity, valuePerShare, username, memberRoleId } = req.body;
   const datetime =  moment().format('YYYY-MM-DD H:m:s');
+  const totalShare = shareQuantity * valuePerShare
+  const investmentStatusId = (memberRoleId == 3) ? 1 : 0;
+  const approvedAt = (memberRoleId == 3) ? datetime : null;
+  const approvedBy = (memberRoleId == 3) ? username : null;
 
   let strShareQuantity, strTotalShare;
     if(investmentTypeId == 1){
@@ -124,8 +152,8 @@ router.post("/", async (req, res) => {
 
     try {
       connection.query(
-        "INSERT INTO tbl_investment(investmentTypeId, shareQuantity, valuePerShare, totalShare, nationalId, investmentDateTime, createdAt, createdBy) VALUES (?,?,?,?,?,?,?,?)",
-        [investmentTypeId, strShareQuantity, valuePerShare, strTotalShare, nationalId, datetime, datetime, username],
+        "INSERT INTO tbl_investment(investmentTypeId, shareQuantity, valuePerShare, totalShare, nationalId, investmentDateTime, createdAt, createdBy, investmentStatusId, approvedAt, approvedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        [investmentTypeId, strShareQuantity, valuePerShare, strTotalShare, nationalId, datetime, datetime, username, investmentStatusId, approvedAt, approvedBy],
         (err, results, fields) => {
           if (err) {
             console.log("Error while inserting a dept into database!", err);
@@ -143,17 +171,15 @@ router.post("/", async (req, res) => {
   }
 );
 
-router.put("/:nationalId", async (req, res) => {
-  const nationalId = req.params.nationalId;
-  const deptId = req.body.deptId;
-  const deptName = req.body.deptName;
-  const deptStatusId = req.body.deptStatusId;
-  const branchId = req.body.branchId;
-  const orgId = req.body.orgId;
+router.put("/:investmentId", async (req, res) => {
+  const investmentId = req.params.investmentId;
+  const {username, investmentStatusId} = req.body;
+  const datetime =  moment().format('YYYY-MM-DD H:m:s');
+
   try {
     connection.query(
-      "UPDATE tbl_member SET deptName = ?, deptStatusId = ?, branchId = ?, orgId = ? WHERE nationalId = ?",
-      [deptName, deptStatusId, branchId, orgId, nationalId],
+      "UPDATE tbl_investment SET investmentStatusId = ?, approvedAt = ?, approvedBy = ? WHERE investmentId = ?",
+      [investmentStatusId, datetime, username, investmentId],
       (err, results, fields) => {
         if (err) {
           console.log("Error while updating a dept in database!", err);
@@ -161,7 +187,7 @@ router.put("/:nationalId", async (req, res) => {
         }
         return res
           .status(200)
-          .json({ message: "The dept is successfully updated!" });
+          .json({ status: 'success', message: "บันทึกผลการพิจารณคำขอเรียบร้อยแล้ว!" });
       }
     );
   } catch (err) {
