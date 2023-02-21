@@ -26,4 +26,4 @@ app.use("/dividends", dividendsRouter);
 app.use("/payments", paymentsRouter);
 app.use("/utils", utilsRouter);
 
-app.listen(3030, () => console.log("Server is running on port 3030"));
+app.listen(3001, () => console.log("Server is running on port 3001"));

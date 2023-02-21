@@ -1,4 +1,4 @@
-FROM node:14
+FROM node:10.16.0
 ENV NODE_ENV=production
 WORKDIR /app
 COPY . /app
