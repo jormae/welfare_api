@@ -86,8 +86,9 @@ router.get("/request", (req, res) => {
   }
 });
 
-router.get("/request/:nationalId", (req, res) => {
+router.get("/request/:nationalId/:loanId", (req, res) => {
   const nationalId = req.params.nationalId;
+  const loanId = req.params.loanId;
   try {
     const mysql =
     "SELECT l.*, m.*, lt.*, pt.*, mt.*, p.*, ls.* "+
@@ -102,8 +103,9 @@ router.get("/request/:nationalId", (req, res) => {
     "LEFT JOIN tbl_loan_status ls ON ls.loanStatusId = l.loanStatusId "+
     "LEFT JOIN tbl_member m1 ON m1.nationalId = l.firstReferenceId "+
     "LEFT JOIN tbl_member m2 ON m2.nationalId = l.secondReferenceId "+
-    "WHERE l.nationalId = ?";
-    connection.query(mysql,[nationalId], (err, results, fields) => {
+    "WHERE l.nationalId = ? "+
+    "AND l.loanId = ?";
+    connection.query(mysql,[nationalId, loanId], (err, results, fields) => {
       if (err) {
         console.log(err);
         return res.status(400).send();
@@ -221,8 +223,8 @@ router.get("/surety/:nationalId", async (req, res) => {
   }
 });
 
-router.get("/payment-suggestion/:nationalId", async (req, res) => {
-  const nationalId = req.params.nationalId;
+router.get("/payment-suggestion/:loanId", async (req, res) => {
+  const loanId = req.params.loanId;
   try {
     connection.query(
       // "SELECT lp.loanId, DATE_ADD(loanPaymentMonth, INTERVAL 1 MONTH) AS loanPaymentMonth, monthNo + 1 AS monthNo, paymentAmount, lp.paymentTypeId, l.nationalId, memberName, refId "+  
@@ -239,9 +241,9 @@ router.get("/payment-suggestion/:nationalId", async (req, res) => {
       "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId "+
       "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId  "+
       "WHERE loanStatusId = 1 "+ 
-      "AND l.nationalId = ?"+
+      "AND l.loanId = ?"+
       ") AS x",
-      [nationalId],
+      [loanId],
       (err, results, fields) => {
         if (err) {
           console.log(err);
@@ -277,8 +279,11 @@ body("nationalId").custom((value, { req }) => {
   });
 }),
 async (req, res) => {
-    const { nationalId, loanTypeId, firstReferenceId, secondReferenceId } = req.body;
-    const requestedDateTime =  moment().format('YYYY-MM-DD H:i:s');
+    const { nationalId, loanTypeId, firstReferenceId, secondReferenceId, memberRoleId, userName } = req.body;
+    const datetime =  moment().format('YYYY-MM-DD H:m:s');
+    // const approvedAt = (memberRoleId == 4) ? datetime : null
+    // const approvedBy = (memberRoleId == 4) ? userName : null
+    // const loanStatusId = (memberRoleId == 4) ? 1 : null
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -289,7 +294,7 @@ async (req, res) => {
     try {
       connection.query(
         "INSERT INTO tbl_loan(nationalId, loanTypeId, firstReferenceId, secondReferenceId, requestedDateTime) VALUES (?,?,?,?,?)",
-        [nationalId, loanTypeId, firstReferenceId, secondReferenceId, requestedDateTime],
+        [nationalId, loanTypeId, firstReferenceId, secondReferenceId, datetime],
         (err, results, fields) => {
           if (err) {
             console.log("Error :: บันทึกข้อมูลการส่งคำร้องขอสวัสดิการล้มเหลว!", err);

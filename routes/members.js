@@ -18,7 +18,8 @@ router.get("/", (req, res) => {
     "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId "+
     "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = m.paymentTypeId "+
     "LEFT JOIN tbl_position p ON p.positionId = m.positionId "+
-    "LEFT JOIN tbl_spouse s ON s.memberNationalId = m.nationalId ";
+    "LEFT JOIN tbl_spouse s ON s.memberNationalId = m.nationalId "+
+    "ORDER BY memberName";
     connection.query(
       mysql, (err, results, fields) => {
       if (err) {

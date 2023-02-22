@@ -82,7 +82,7 @@ body("loanId","loanPaymentMonth").custom((value, { req }) => {
 }),
 async (req, res) => {
     const { nationalId, loanId, loanPaymentMonth, monthNo, paymentAmount, paymentTypeId, userName, memberRoleId } = req.body;
-    const datetime =  moment().format('YYYY-MM-DD H:i:s');
+    const datetime =  moment().format('YYYY-MM-DD H:m:s');
     const approvedAt = (memberRoleId != 4) ? datetime : null
     const approvedBy = (memberRoleId != 4) ? userName : null
 
