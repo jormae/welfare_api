@@ -91,9 +91,10 @@ router.get("/request/:nationalId/:loanId", (req, res) => {
   const loanId = req.params.loanId;
   try {
     const mysql =
-    "SELECT l.*, m.*, lt.*, pt.*, mt.*, p.*, ls.* "+
+    "SELECT l.*, m.*, lt.*, pt.*, mt.*, p.*, ls.*, l.approvedAt AS loanApprovedAt "+
     ",m1.memberName AS firstReferenceName, m1.contactNo AS firstReferenceContactNo, m2.memberName AS secondReferenceName, m2.contactNo AS secondReferenceContactNo, " +
-    "m.memberName AS loanMemberName "+
+    "m.memberName AS loanMemberName, s1.spouseName AS firstSpouseName, s1.spouseContactNo AS firstSpouseContactNo, s2.spouseName AS secondSpouseName, s1.spouseContactNo AS secondSpouseContactNo, "+
+    "s1.spouseNationalId AS firstSpouseNationalId, s2.spouseNationalId AS secondSpouseNationalId "+
     "FROM tbl_loan l " +
     "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId "+
     "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId "+
@@ -103,6 +104,8 @@ router.get("/request/:nationalId/:loanId", (req, res) => {
     "LEFT JOIN tbl_loan_status ls ON ls.loanStatusId = l.loanStatusId "+
     "LEFT JOIN tbl_member m1 ON m1.nationalId = l.firstReferenceId "+
     "LEFT JOIN tbl_member m2 ON m2.nationalId = l.secondReferenceId "+
+    "LEFT JOIN tbl_spouse s1 ON s1.memberNationalId = l.firstReferenceId "+
+    "LEFT JOIN tbl_spouse s2 ON s2.memberNationalId = l.secondReferenceId "+
     "WHERE l.nationalId = ? "+
     "AND l.loanId = ?";
     connection.query(mysql,[nationalId, loanId], (err, results, fields) => {
