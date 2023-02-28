@@ -37,9 +37,9 @@ router.get("/", (req, res) => {
 router.get("/active", (req, res) => {
   try {
     const mysql =
-    "SELECT approvedAt, memberName, positionName, memberTypeName, loanTypeName, loanAmount, loanStatusName, loanDurationInMonth, monthlyPayment, (loanAmount - (if(loanBalance IS NOT NULL, loanBalance, 0))) AS loanBalance "+
+    "SELECT approvedAt, memberName, positionName, memberTypeName, loanTypeName, loanAmount, loanStatusName, loanDurationInMonth, monthlyPayment, (loanAmount - (if(loanBalance IS NOT NULL, loanBalance, 0))) AS loanBalance, loanId, nationalId "+
     "FROM"+
-    "(SELECT l.approvedAt, memberName, positionName, memberTypeName, loanTypeName, loanAmount, loanStatusName, loanDurationInMonth, monthlyPayment, "+
+    "(SELECT l.approvedAt, memberName, positionName, memberTypeName, loanTypeName, loanAmount, loanStatusName, loanDurationInMonth, monthlyPayment, l.loanId, l.nationalId, "+
     "(SELECT SUM(paymentAmount) FROM tbl_loan_payment lp WHERE lp.loanId = l.loanId) AS loanBalance "+
     "FROM tbl_loan l "+
     "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId "+
@@ -94,7 +94,8 @@ router.get("/request/:nationalId/:loanId", (req, res) => {
     "SELECT l.*, m.*, lt.*, pt.*, mt.*, p.*, ls.*, l.approvedAt AS loanApprovedAt "+
     ",m1.memberName AS firstReferenceName, m1.contactNo AS firstReferenceContactNo, m2.memberName AS secondReferenceName, m2.contactNo AS secondReferenceContactNo, " +
     "m.memberName AS loanMemberName, s1.spouseName AS firstSpouseName, s1.spouseContactNo AS firstSpouseContactNo, s2.spouseName AS secondSpouseName, s1.spouseContactNo AS secondSpouseContactNo, "+
-    "s1.spouseNationalId AS firstSpouseNationalId, s2.spouseNationalId AS secondSpouseNationalId "+
+    "s1.spouseNationalId AS spouseNationalId, s2.spouseNationalId AS secondSpouseNationalId, "+
+    "s.spouseNationalId, s.spouseName "+
     "FROM tbl_loan l " +
     "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId "+
     "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId "+
@@ -104,6 +105,7 @@ router.get("/request/:nationalId/:loanId", (req, res) => {
     "LEFT JOIN tbl_loan_status ls ON ls.loanStatusId = l.loanStatusId "+
     "LEFT JOIN tbl_member m1 ON m1.nationalId = l.firstReferenceId "+
     "LEFT JOIN tbl_member m2 ON m2.nationalId = l.secondReferenceId "+
+    "LEFT JOIN tbl_spouse s ON s.memberNationalId = m.nationalId "+
     "LEFT JOIN tbl_spouse s1 ON s1.memberNationalId = l.firstReferenceId "+
     "LEFT JOIN tbl_spouse s2 ON s2.memberNationalId = l.secondReferenceId "+
     "WHERE l.nationalId = ? "+
