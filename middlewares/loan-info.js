@@ -5,9 +5,8 @@ const app = express();
 app.use(express.json());
 
 const loanInfo = function (req, res, next) {
-      // const loanId = req.body.loanId
-      const loanId = 24
-      console.log(loanId);
+  
+      const loanId = req.params.loanId
 
         try {
           connection.query(

@@ -6,6 +6,8 @@ const { body, validationResult } = require("express-validator");
 const moment = require("moment-timezone");
 moment.tz.setDefault("Asia/Bangkok");
 
+const loanRequestDuplicateInfo = require("../middlewares/loan-request-duplicate-info");
+
 const app = express();
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -264,67 +266,48 @@ router.get("/payment-suggestion/:loanId", async (req, res) => {
 });
 
 // post
-router.post("/",
-body("nationalId").custom((value, { req }) => {
-  return new Promise((resolve, reject) => {
-    const nationalId = req.body.nationalId;
-    connection.query(
-      "SELECT * FROM tbl_loan WHERE nationalId = ? AND  (loanStatusId IS NULL OR loanStatusId = 1)",
-      [nationalId],
-      (err, res) => {
-        if (err) {
-          reject(new Error("Server Error"));
-        }
-        if (res.length > 0) {
-          reject(new Error("ส่งคำร้องขอสวัสดิการซ้ำหรือท่านกำลังกู้เงินสวัสดิการขณะนี้!"));
-        }
-        resolve(true);
-      }
-    );
-  });
-}),
-async (req, res) => {
-    const { nationalId, loanTypeId, firstReferenceId, secondReferenceId, memberRoleId, userName } = req.body;
+router.post("/", loanRequestDuplicateInfo, async (req, res) => {
+    const { nationalId, loanTypeId, firstReferenceId, secondReferenceId, memberRoleId, userName, debtStatusId, debt1, debt2, debt3, debt4, debt5, debt6 } = req.body;
     const datetime =  moment().format('YYYY-MM-DD H:m:s');
-    // const approvedAt = (memberRoleId == 4) ? datetime : null
-    // const approvedBy = (memberRoleId == 4) ? userName : null
-    // const loanStatusId = (memberRoleId == 4) ? 1 : null
 
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        errors: errors.array(),
-      });
+    if(req.totalLoan >= 1){
+      return res
+            .status(400)
+            .json({ status: 'err', message: "ส่งคำร้องขอสวัสดิการซ้ำ กรุณาลองใหม่อีกครั้ง!" });
     }
-    try {
-      connection.query(
-        "INSERT INTO tbl_loan(nationalId, loanTypeId, firstReferenceId, secondReferenceId, requestedDateTime) VALUES (?,?,?,?,?)",
-        [nationalId, loanTypeId, firstReferenceId, secondReferenceId, datetime],
-        (err, results, fields) => {
-          if (err) {
-            console.log("Error :: บันทึกข้อมูลการส่งคำร้องขอสวัสดิการล้มเหลว!", err);
-            return res.status(400).send();
+    else{
+
+      try {
+        connection.query(
+          "INSERT INTO tbl_loan(nationalId, loanTypeId, firstReferenceId, secondReferenceId, requestedDateTime, debtStatusId, debt1, debt2, debt3, debt4, debt5, debt6 ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+          [nationalId, loanTypeId, firstReferenceId, secondReferenceId, datetime, debtStatusId, debt1, debt2, debt3, debt4, debt5, debt6 ],
+          (err, results, fields) => {
+            if (err) {
+              console.log("Error :: บันทึกข้อมูลการส่งคำร้องขอสวัสดิการล้มเหลว!", err);
+              return res.status(400).send();
+            }
+            return res
+              .status(201)
+              .json({ status: 'success', message: "บันทึกข้อมูลการส่งคำร้องขอสวัสดิการเรียบร้อยแล้ว!" });
           }
-          return res
-            .status(201)
-            .json({ status: 'success', message: "บันทึกข้อมูลการส่งคำร้องขอสวัสดิการเรียบร้อยแล้ว!" });
-        }
-      );
-    } catch (err) {
-      console.log(err);
-      return res.status(500).send();
+        );
+      } catch (err) {
+        console.log(err);
+        return res.status(500).send();
+      }
     }
   }
 );
 
 router.put("/:loanId", async (req, res) => {
   const loanId = req.params.loanId;
-  const { approvedBy, loanStatusId, refId } = req.body;
+  const { approvedBy, loanStatusId, refId, loanTypeId } = req.body;
   const approvedAt =  moment().format('YYYY-MM-DD H:m:s');
+  const loanFee = (loanTypeId <= 2) ? 50 : null
   try {
     connection.query(
-      "UPDATE tbl_loan SET refId = ?, approvedBy = ?, approvedAt = ?, loanStatusId = ? WHERE loanId = ? ",
-      [refId, approvedBy, approvedAt, loanStatusId, loanId],
+      "UPDATE tbl_loan SET refId = ?, approvedBy = ?, approvedAt = ?, loanStatusId = ?, loanFee = ? WHERE loanId = ? ",
+      [refId, approvedBy, approvedAt, loanStatusId, loanFee, loanId],
       (err, results, fields) => {
         if (err) {
           console.log("Error while updating loan approval in database!", err);

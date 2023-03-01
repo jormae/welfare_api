@@ -2,8 +2,9 @@ const express = require("express");
 const connection = require("../config/database-connection");
 const router = express.Router();
 const bodyParser = require("body-parser");
-// const { body, validationResult } = require("express-validator");
-const loanInfo = require("../middlewares/loan");
+const { body, validationResult } = require("express-validator");
+const loanInfo = require("../middlewares/loan-info");
+const memberInfo = require("../middlewares/member-info");
 
 const app = express();
 app.use(express.json());
@@ -93,11 +94,13 @@ router.get("/member-status", (req, res) => {
   }
 });
 
-router.get("/loan-types", (req, res) => {
+router.get("/loan-types/:nationalId", memberInfo, async (req, res, next) => {
+  const nationalId = req.params.nationalId;
+  console.log(req.memberTypeId)
   try {
     const mysql =
-      "SELECT * FROM tbl_loan_type  ORDER BY loanTypeName, loanAmount  ";
-    connection.query(mysql, (err, results, fields) => {
+      "SELECT * FROM tbl_loan_type WHERE FIND_IN_SET(?, memberTypeIds) ORDER BY loanTypeName, loanAmount  ";
+    connection.query(mysql, req.memberTypeId, (err, results, fields) => {
       if (err) {
         console.log(err);
         return res.status(400).send();
