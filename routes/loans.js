@@ -301,13 +301,16 @@ router.post("/", loanRequestDuplicateInfo, async (req, res) => {
 
 router.put("/:loanId", async (req, res) => {
   const loanId = req.params.loanId;
-  const { approvedBy, loanStatusId, refId, loanTypeId } = req.body;
+  const { approvedBy, loanStatusId, refId, loanTypeId, loanDurationInMonth, loanAmount } = req.body;
   const approvedAt =  moment().format('YYYY-MM-DD H:m:s');
   const loanFee = (loanTypeId <= 2) ? 50 : null
+  const startLoanDate = moment().format('YYYY-MM-DD');
+  const endLoanDate = moment(startLoanDate).add(loanDurationInMonth - 1,'month').format('YYYY-MM-DD');
+  const amount = loanAmount
   try {
     connection.query(
-      "UPDATE tbl_loan SET refId = ?, approvedBy = ?, approvedAt = ?, loanStatusId = ?, loanFee = ? WHERE loanId = ? ",
-      [refId, approvedBy, approvedAt, loanStatusId, loanFee, loanId],
+      "UPDATE tbl_loan SET refId = ?, approvedBy = ?, approvedAt = ?, loanStatusId = ?, loanFee = ?, startLoanDate = ?, endLoanDate = ?, loanDuration = ?, amount = ? WHERE loanId = ? ",
+      [refId, approvedBy, approvedAt, loanStatusId, loanFee, startLoanDate, endLoanDate, loanDurationInMonth, loanAmount, loanId],
       (err, results, fields) => {
         if (err) {
           console.log("Error while updating loan approval in database!", err);

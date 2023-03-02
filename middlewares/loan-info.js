@@ -21,6 +21,8 @@ const loanInfo = function (req, res, next) {
               }
               console.log(results)
               req.loanDurationInMonth = results[0].loanDurationInMonth
+              req.startLoanDate = results[0].startLoanDate
+              req.endLoanDate = results[0].endLoanDate
               req.approvedAt = results[0].approvedAt
               req.loanAmount = results[0].loanAmount
               req.monthlyPayment = results[0].monthlyPayment

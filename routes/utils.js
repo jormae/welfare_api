@@ -113,8 +113,10 @@ router.get("/loan-types/:nationalId", memberInfo, async (req, res, next) => {
   }
 });
 
-router.get("/loan-month-range/:loanId", loanInfo, (req, res, next) => {
+router.get("/loan-month-range/:loanId", loanInfo, (req, res) => {
   const loanId = req.params.loanId;
+  console.log(req.startLoanDate)
+  console.log(req.endLoanDate)
   // req.approvedAt
   // const approvedAt = "2023-02-01"
   try {
@@ -125,7 +127,7 @@ router.get("/loan-month-range/:loanId", loanInfo, (req, res, next) => {
       "from "+
       "( "+
       "select  "+
-      "(? - INTERVAL DAYOFMONTH(?)-1 DAY)  "+
+      "(? - INTERVAL DAYOFMONTH(?) - 30 DAY)  "+
       "+INTERVAL m MONTH as m1 "+
       "from "+ 
       "( "+
@@ -134,12 +136,12 @@ router.get("/loan-month-range/:loanId", loanInfo, (req, res, next) => {
       "(select 1 union select 2 union select 3 union select 4) t2, "+
       "(select 1 union select 2 union select 3 union select 4) t3, "+
       "(select 1 union select 2 union select 3 union select 4) t4, "+
-      "(select @rownum:=-1) t0 "+
+      "(select @rownum:=1) t0 "+
       ") d1 "+
       ") d2  "+
       "where m1 BETWEEN ? AND DATE_ADD(?, INTERVAL ? MONTH) "+
       "order by m1";
-    connection.query(mysql, [req.approvedAt, req.approvedAt, req.approvedAt, req.approvedAt, req.loanDurationInMonth],(err, results, fields) => {
+    connection.query(mysql, [req.startLoanDate, req.startLoanDate, req.startLoanDate, req.startLoanDate, req.loanDurationInMonth],(err, results, fields) => {
       if (err) {
         console.log(err);
         return res.status(400).send();
