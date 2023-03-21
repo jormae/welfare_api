@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const res = require("express/lib/response");
 const authRouter = require("./routes/auth");
+const allowancesRouter = require("./routes/allowances");
 const dashboardRouter = require("./routes/dashboard");
 const membersRouter = require("./routes/members");
 const spousesRouter = require("./routes/spouses");
@@ -17,6 +18,7 @@ app.use(express.json());
 
 app.get("/", (req, res) => res.send("Welcome to my js api."));
 app.use("/auth", authRouter);
+app.use("/allowances", allowancesRouter);
 app.use("/dashboard", dashboardRouter);
 app.use("/members", membersRouter);
 app.use("/spouses", spousesRouter);
