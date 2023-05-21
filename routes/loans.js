@@ -180,7 +180,7 @@ router.get("/loan-history/:nationalId/:loanId", async (req, res) => {
   const loanId = req.params.loanId;
   try {
     connection.query(
-      "SELECT monthNo, loanPaymentMonth, paymentAmount, paymentTypeName, lp.approvedAt, lp.approvedBy, loanStatusName  " +
+      "SELECT monthNo, loanPaymentMonth, paymentAmount, paymentTypeName, lp.approvedAt, lp.approvedBy, loanStatusName, paymentFilePath  " +
       "FROM tbl_loan_payment lp  "+
       "LEFT JOIN tbl_loan l ON lp.loanId = l.loanId "+
       "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = lp.paymentTypeId  " +
@@ -301,8 +301,8 @@ router.post("/", loanRequestDuplicateInfo, async (req, res) => {
 
 router.put("/:loanId", async (req, res) => {
   const loanId = req.params.loanId;
-  const { approvedBy, loanStatusId, refId, loanTypeId, loanDurationInMonth, loanAmount } = req.body;
-  const approvedAt =  moment().format('YYYY-MM-DD H:m:s');
+  const { approvedBy, loanStatusId, refId, loanTypeId, loanDurationInMonth, loanAmount, approvedAt } = req.body;
+  // const approvedAt =  moment().format('YYYY-MM-DD H:m:s');
   const loanFee = (loanTypeId <= 2) ? 50 : null
   const startLoanDate = moment().format('YYYY-MM-DD');
   const endLoanDate = moment(startLoanDate).add(loanDurationInMonth - 1,'month').format('YYYY-MM-DD');

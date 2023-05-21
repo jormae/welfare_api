@@ -4,6 +4,10 @@ const router = express.Router();
 const bodyParser = require("body-parser");
 const { body, validationResult } = require("express-validator");
 const moment = require("moment-timezone");
+const multer  =   require('multer');
+const path = require('path')
+
+const uploadInfo = require("../middlewares/upload-file");
 moment.tz.setDefault("Asia/Bangkok");
 
 const app = express();
@@ -60,7 +64,7 @@ router.get("/", (req, res) => {
 // });
 
 // post
-router.post("/",
+router.post("/", uploadInfo,
 body("loanId","loanPaymentMonth").custom((value, { req }) => {
   return new Promise((resolve, reject) => {
     const loanId = req.body.loanId;
@@ -81,10 +85,16 @@ body("loanId","loanPaymentMonth").custom((value, { req }) => {
   });
 }),
 async (req, res) => {
-    const { nationalId, loanId, loanPaymentMonth, monthNo, paymentAmount, paymentTypeId, userName, memberRoleId } = req.body;
+    const { nationalId, loanId, loanPaymentMonth, monthNo, paymentAmount, paymentTypeId, userName, memberRoleId, slip } = req.body;
     const datetime =  moment().format('YYYY-MM-DD H:m:s');
     const approvedAt = (memberRoleId != 4) ? datetime : null
     const approvedBy = (memberRoleId != 4) ? userName : null
+    // const slip = req.body.slip;
+    // console.log('slip = '+slip)
+    const paymentFilePath =  req.paymentFilePath;
+    console.log('paymentFilePath  = '+paymentFilePath)
+    // console.log(paymentFilePath)
+
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -94,8 +104,8 @@ async (req, res) => {
     }
     try {
       connection.query(
-        "INSERT INTO tbl_loan_payment(loanId, loanPaymentMonth, monthNo, paymentAmount, paymentTypeId, createdAt, createdBy, approvedAt, approvedBy) VALUES (?,?,?,?,?,?,?,?,?)",
-        [loanId, loanPaymentMonth, monthNo, paymentAmount, paymentTypeId, datetime, userName, approvedAt, approvedBy],
+        "INSERT INTO tbl_loan_payment(loanId, loanPaymentMonth, monthNo, paymentAmount, paymentTypeId, createdAt, createdBy, approvedAt, approvedBy, paymentFilePath) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        [loanId, loanPaymentMonth, monthNo, paymentAmount, paymentTypeId, datetime, userName, approvedAt, approvedBy, paymentFilePath],
         (err, results, fields) => {
           if (err) {
             console.log("Error :: บันทึกข้อมูลการชำระเงินสวัสดิการล้มเหลว!", err);

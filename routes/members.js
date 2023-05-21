@@ -4,6 +4,8 @@ const router = express.Router();
 const bodyParser = require("body-parser");
 const { body, validationResult } = require("express-validator");
 const { query } = require("express");
+const moment = require("moment-timezone");
+moment.tz.setDefault("Asia/Bangkok");
 
 const app = express();
 app.use(express.json());
@@ -100,7 +102,13 @@ router.post(
       paymentTypeId,
       memberTypeId,
       memberRoleId,
-      memberStatusId} = req.body;
+      memberStatusId,
+      shareQuantity, 
+      valuePerShare, 
+      totalShare,
+      username} = req.body;
+  const datetime =  moment().format('YYYY-MM-DD H:m:s');
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -121,6 +129,9 @@ router.post(
             return res.status(400).send();
           }
           connection.query("INSERT INTO tbl_spouse(memberNationalId) VALUES (?)", nationalId);
+          connection.query(
+            "INSERT INTO tbl_investment(investmentTypeId, shareQuantity, valuePerShare, totalShare, nationalId, investmentDateTime, createdAt, createdBy, investmentStatusId, approvedAt, approvedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            [1, shareQuantity, valuePerShare, totalShare, nationalId, datetime, datetime, username, 1, datetime, username]);
           return res
             .status(201)
             .json({ status: "success", message: "บันทึกการเพิ่มสมาชิกใหม่เรียบร้อยแล้ว!" });

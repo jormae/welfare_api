@@ -61,9 +61,10 @@ router.post("/signin", jsonParser, function (req, res, next) {
             return res.status(400).send();
           }
           if (users.length == 0) {
-            res.json({ status: "error", message: "ไม่พบข้อมูลผู้ใช้" });
+            return res
+          .status(200)
+          .json({ status: "error", message: "ไม่พบข้อมูลบัญชีผู้ใช้ กรุณาลองใหม่อีกครั้ง" });
           }
-          //   console.log(users);
           bcrypt.compare(password, users[0].password, function (err, isLogin) {
             if (isLogin) {
               let token = jwt.sign({ nationalId: users[0].nationalId }, secret, {
@@ -88,7 +89,7 @@ router.post("/signin", jsonParser, function (req, res, next) {
               //     status: "error",
               //     message: "Sign in failed!",
               //   });
-              res.json({ status: "error", message: "Sign in failed!" });
+              res.json({ status: "error", message: "ชื่อบัญชีหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง!" });
             }
           });
         }
@@ -112,6 +113,60 @@ router.post("/token", jsonParser, function (req, res, next) {
 
 router.get("/", (req, res) => {
   res.json("Hello");
+});
+
+router.put("/:nationalId", async (req, res) => {
+  const nationalId = req.params.nationalId;
+  const password  = req.body.newPassword;
+  console.log('password = '+password)
+  try {
+    bcrypt.hash(password, saltRounds, function (err, hash) {
+      console.log('hash password = '+hash)
+    connection.query(
+      "UPDATE tbl_member SET password = ? WHERE nationalId = ? ",
+      [hash, nationalId],
+      (err, results, fields) => {
+        if (err) {
+          console.log("Error while updating member account in database!", err);
+          return res.status(400).send();
+        }
+        return res
+          .status(200)
+          .json({status:'success', message: "บันทึกข้อมูลการเปลี่ยนรหัสผ่านใหม่สำเร็จ!" });
+      }
+    );
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
+router.put("/reset/:nationalId", async (req, res) => {
+  const nationalId = req.params.nationalId;
+  const password  = req.params.nationalId;
+  console.log('password = '+password)
+  try {
+    bcrypt.hash(password, saltRounds, function (err, hash) {
+      console.log('hash password = '+hash)
+    connection.query(
+      "UPDATE tbl_member SET password = ? WHERE nationalId = ? ",
+      [hash, nationalId],
+      (err, results, fields) => {
+        if (err) {
+          console.log("Error while updating member account in database!", err);
+          return res.status(400).send();
+        }
+        return res
+          .status(200)
+          .json({status:'success', message: "บันทึกข้อมูลการ Reset รหัสผ่านสำเร็จ!" });
+      }
+    );
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
 });
 
 module.exports = router;
