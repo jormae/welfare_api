@@ -1,6 +1,13 @@
 version: '3.3'
 services:
   api:
+    image: 'welfare_api:1.0.0'
+    environment:
+      HOST_NAME: ${HOST_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
     build:  .
     ports:
       - 3030:3030
