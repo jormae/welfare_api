@@ -31,6 +31,26 @@ router.get("/", (req, res) => {
   }
 });
 
+router.get("/sum", (req, res) => {
+  try {
+    const mysql =
+      "SELECT SUM(allowanceAmount) AS TOTAL_ALLOWANCE_BALANCE, "+ 
+      "(SELECT SUM(allowanceAmount) FROM tbl_allowance al WHERE allowanceTypeId = 1) AS INCOME_ALLOWANCE,  "+
+      "(SELECT SUM(allowanceAmount) FROM tbl_allowance al WHERE allowanceTypeId = 2) AS EXPENSE_ALLOWANCE  "+
+      "FROM tbl_allowance a ";
+    connection.query(mysql, [date, date, date], (err, results, fields) => {
+      if (err) {
+        console.log(err);
+        return res.status(400).send();
+      }
+      res.status(200).json(results);
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
 router.get("/date/:date", (req, res) => {
   const date = req.params.date + '%'
   console.log(date)

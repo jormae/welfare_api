@@ -7,6 +7,7 @@ const moment = require("moment-timezone");
 moment.tz.setDefault("Asia/Bangkok");
 
 const loanRequestDuplicateInfo = require("../middlewares/loan-request-duplicate-info");
+const loanFeeInfo = require("../middlewares/loan-fee-info");
 
 const app = express();
 app.use(express.json());
@@ -97,7 +98,7 @@ router.get("/request/:nationalId/:loanId", (req, res) => {
     ",m1.memberName AS firstReferenceName, m1.contactNo AS firstReferenceContactNo, m2.memberName AS secondReferenceName, m2.contactNo AS secondReferenceContactNo, " +
     "m.memberName AS loanMemberName, s1.spouseName AS firstSpouseName, s1.spouseContactNo AS firstSpouseContactNo, s2.spouseName AS secondSpouseName, s1.spouseContactNo AS secondSpouseContactNo, "+
     "s1.spouseNationalId AS spouseNationalId, s2.spouseNationalId AS secondSpouseNationalId, "+
-    "s.spouseNationalId, s.spouseName "+
+    "s.spouseNationalId, s.spouseName, lt.loanTypeName, lt.loanMainTypeId "+
     "FROM tbl_loan l " +
     "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId "+
     "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId "+
@@ -299,12 +300,13 @@ router.post("/", loanRequestDuplicateInfo, async (req, res) => {
   }
 );
 
-router.put("/:loanId", async (req, res) => {
+router.put("/:loanId", loanFeeInfo, async (req, res) => {
   const loanId = req.params.loanId;
-  const { approvedBy, loanStatusId, refId, loanTypeId, loanDurationInMonth, loanAmount, approvedAt } = req.body;
-  // const approvedAt =  moment().format('YYYY-MM-DD H:m:s');
-  const loanFee = (loanTypeId <= 2) ? 50 : null
-  const startLoanDate = moment().format('YYYY-MM-DD');
+  const { approvedBy, loanStatusId, refId, loanTypeId, loanDurationInMonth, loanAmount } = req.body;
+  const approvedAt =  moment().format('YYYY-MM-DD H:m:s');
+  // const loanFee = (loanTypeId <= 2) ? 50 : null
+  const loanFee = req.loanFee
+  const startLoanDate = moment().add(1, 'month').format('YYYY-MM-DD');
   const endLoanDate = moment(startLoanDate).add(loanDurationInMonth - 1,'month').format('YYYY-MM-DD');
   const amount = loanAmount
   try {
