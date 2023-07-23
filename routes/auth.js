@@ -15,6 +15,46 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+router.get("/default-password/:nationalId", jsonParser, function (req, res, next) {
+  let nationalId = req.params.nationalId;
+  let password = "123456";
+  console.log("/default-password")
+  try {
+    bcrypt.hash(password, saltRounds, function (err, hash) {
+      connection.query(
+        "SELECT * FROM tbl_member m LEFT JOIN tbl_member_role mr ON mr.memberRoleId = m.memberRoleId WHERE nationalId = ? ",
+        [nationalId],
+        (err, users, fields) => {
+          if (err) {
+            console.log("Error while getting user info!", err);
+            return res.status(400).send();
+          }
+          if (users.length == 0) {
+            return res
+          .status(200)
+          .json({ status: "error", message: "ไม่พบข้อมูลบัญชีผู้ใช้ กรุณาลองใหม่อีกครั้ง" });
+          }
+          bcrypt.compare(password, users[0].password, function (err, isDefaultPassword) {
+          console.log('password = '+password)
+          console.log('encrypted password = '+users[0].password)
+            if (isDefaultPassword) {
+              res.json({
+                status: "error",
+                message: "กรุณาเปลี่ยนรหัสผ่านใหม่!",
+              });
+            } else {
+              res.json({ status: "success", message: "User set new password" });
+            }
+          });
+        }
+      );
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
 router.post("/signup", jsonParser, function (req, res, next) {
   let email = req.body.email;
   let password = req.body.password;

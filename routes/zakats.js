@@ -15,9 +15,9 @@ router.get("/", (req, res) => {
   try {
     const mysql =
       "SELECT * "+
-      "FROM tbl_allowance a "+
-      "LEFT JOIN tbl_allowance_type at ON at.allowanceTypeId = a.allowanceTypeId "+
-      "ORDER BY allowanceDateTime DESC";
+      "FROM tbl_zakat z "+
+      "LEFT JOIN tbl_zakat_type zt ON zt.zakatTypeId = z.zakatTypeId "
+      "ORDER BY zakatDateTime DESC";
     connection.query(mysql, (err, results, fields) => {
       if (err) {
         console.log(err);
@@ -34,10 +34,10 @@ router.get("/", (req, res) => {
 router.get("/sum", (req, res) => {
   try {
     const mysql =
-      "SELECT SUM(allowanceAmount) AS TOTAL_ALLOWANCE_BALANCE, "+ 
-      "(SELECT SUM(allowanceAmount) FROM tbl_allowance al WHERE allowanceTypeId = 1) AS INCOME_ALLOWANCE,  "+
-      "(SELECT SUM(allowanceAmount) FROM tbl_allowance al WHERE allowanceTypeId = 2) AS EXPENSE_ALLOWANCE  "+
-      "FROM tbl_allowance a ";
+      "SELECT SUM(zakatAmount) AS TOTAL_ZAKAT_BALANCE, "+ 
+      "(SELECT SUM(zakatAmount) FROM tbl_zakat al WHERE zakatTypeId = 1) AS INCOME_ZAKAT,  "+
+      "(SELECT SUM(zakatAmount) FROM tbl_zakat al WHERE zakatTypeId = 2) AS EXPENSE_ZAKAT  "+
+      "FROM tbl_zakat a ";
     connection.query(mysql, (err, results, fields) => {
       if (err) {
         console.log(err);
@@ -54,22 +54,22 @@ router.get("/sum", (req, res) => {
 // post
 router.post("/", async (req, res) => {
     
-    const { allowanceDateTime, allowanceTypeId, allowanceName, allowanceAmount, username } = req.body;
+    const { zakatDateTime, zakatTypeId, zakatName, zakatAmount, username } = req.body;
     const createdAt =  moment().format('YYYY-MM-DD H:m:s');
-    const newAllowanceAmount = (allowanceTypeId == 2) ? '-'+allowanceAmount : allowanceAmount;
+    const newZakatAmount = (zakatTypeId == 2) ? '-'+zakatAmount : zakatAmount;
 
     try {
       connection.query(
-        "INSERT INTO tbl_allowance(allowanceDateTime, allowanceTypeId, allowanceName, allowanceAmount, createdBy, createdAt) VALUES (?,?,?,?,?,?)",
-        [allowanceDateTime, allowanceTypeId, allowanceName, newAllowanceAmount, username, createdAt],
+        "INSERT INTO tbl_zakat(zakatDateTime, zakatTypeId, zakatName, zakatAmount, createdBy, createdAt) VALUES (?,?,?,?,?,?)",
+        [zakatDateTime, zakatTypeId, zakatName, newZakatAmount, username, createdAt],
         (err, results, fields) => {
           if (err) {
-            console.log("Error :: บันทึกข้อมูลเงินสวัสดิการล้มเหลว!", err);
+            console.log("Error :: บันทึกข้อมูลซากาตล้มเหลว!", err);
             return res.status(400).send();
           }
           return res
             .status(201)
-            .json({ status: 'success', message: "บันทึกข้อมูลเงินสวัสดิการเรียบร้อยแล้ว!" });
+            .json({ status: 'success', message: "บันทึกข้อมูลซากาตเรียบร้อยแล้ว!" });
         }
       );
     } catch (err) {
@@ -79,20 +79,20 @@ router.post("/", async (req, res) => {
   }
 );
 
-router.delete("/:allowanceId", async (req, res) => {
-  const allowanceId = req.params.allowanceId;
+router.delete("/:zakatId", async (req, res) => {
+  const zakatId = req.params.zakatId;
   try {
     connection.query(
-      "DELETE FROM tbl_allowance WHERE allowanceId = ?",
-      [allowanceId],
+      "DELETE FROM tbl_zakat WHERE zakatId = ?",
+      [zakatId],
       (err, results, fields) => {
         if (err) {
-          console.log("Error while deleting a allowance in database!", err);
+          console.log("Error while deleting a zakat in database!", err);
           return res.status(400).send();
         }
         return res
           .status(200)
-          .json({ message: "The allowance is successfully deleted!" });
+          .json({ message: "The zakat is successfully deleted!" });
       }
     );
   } catch (err) {

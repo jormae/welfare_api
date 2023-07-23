@@ -14,13 +14,15 @@ app.use(bodyParser.json());
 
 router.get("/", (req, res) => {
   try {
-    const mysql = "SELECT * "+
-    "FROM tbl_member m "+
-    "LEFT JOIN tbl_member_role mr ON mr.memberRoleId = m.memberRoleId "+
-    "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId "+
-    "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = m.paymentTypeId "+
-    "LEFT JOIN tbl_position p ON p.positionId = m.positionId "+
-    "LEFT JOIN tbl_spouse s ON s.memberNationalId = m.nationalId "+
+    const mysql = "SELECT *, SUM(totalShare) AS TOTAL_SHARE "+
+    "FROM tbl_member m  "+
+    "LEFT JOIN tbl_member_role mr ON mr.memberRoleId = m.memberRoleId  "+
+    "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId  "+
+    "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = m.paymentTypeId  "+
+    "LEFT JOIN tbl_position p ON p.positionId = m.positionId  "+
+    "LEFT JOIN tbl_spouse s ON s.memberNationalId = m.nationalId "+ 
+    "LEFT JOIN tbl_investment i ON i.nationalId = m.nationalId  "+
+    "GROUP BY m.nationalId  "+
     "ORDER BY memberName";
     connection.query(
       mysql, (err, results, fields) => {
@@ -145,7 +147,7 @@ router.post(
 );
 
 router.put("/:nationalId", async (req, res) => {
-  const {nationalId,
+  const {
    memberName,
    houseNo,
    streetName,
@@ -163,6 +165,7 @@ router.put("/:nationalId", async (req, res) => {
    memberRoleId,
    memberStatusId,
    resignDate } = req.body;
+   const nationalId = req.params.nationalId
   try {
     connection.query(
       "UPDATE tbl_member SET memberName = ?, houseNo = ?, streetName = ?, villageName = ?, villageNo = ?, subDistrict = ?, "+

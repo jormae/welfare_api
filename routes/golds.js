@@ -15,9 +15,8 @@ router.get("/", (req, res) => {
   try {
     const mysql =
       "SELECT * "+
-      "FROM tbl_allowance a "+
-      "LEFT JOIN tbl_allowance_type at ON at.allowanceTypeId = a.allowanceTypeId "+
-      "ORDER BY allowanceDateTime DESC";
+      "FROM tbl_gold  "+
+      "ORDER BY goldDateTime DESC";
     connection.query(mysql, (err, results, fields) => {
       if (err) {
         console.log(err);
@@ -34,10 +33,10 @@ router.get("/", (req, res) => {
 router.get("/sum", (req, res) => {
   try {
     const mysql =
-      "SELECT SUM(allowanceAmount) AS TOTAL_ALLOWANCE_BALANCE, "+ 
-      "(SELECT SUM(allowanceAmount) FROM tbl_allowance al WHERE allowanceTypeId = 1) AS INCOME_ALLOWANCE,  "+
-      "(SELECT SUM(allowanceAmount) FROM tbl_allowance al WHERE allowanceTypeId = 2) AS EXPENSE_ALLOWANCE  "+
-      "FROM tbl_allowance a ";
+      "SELECT SUM(goldAmount) AS TOTAL_GOLD_BALANCE, "+ 
+      "(SELECT SUM(goldAmount) FROM tbl_gold al WHERE goldTypeId = 1) AS INCOME_GOLD,  "+
+      "(SELECT SUM(goldAmount) FROM tbl_gold al WHERE goldTypeId = 2) AS EXPENSE_GOLD  "+
+      "FROM tbl_gold a ";
     connection.query(mysql, (err, results, fields) => {
       if (err) {
         console.log(err);
@@ -54,22 +53,22 @@ router.get("/sum", (req, res) => {
 // post
 router.post("/", async (req, res) => {
     
-    const { allowanceDateTime, allowanceTypeId, allowanceName, allowanceAmount, username } = req.body;
+    const { goldDateTime, goldTypeId, goldName, goldAmount, username } = req.body;
     const createdAt =  moment().format('YYYY-MM-DD H:m:s');
-    const newAllowanceAmount = (allowanceTypeId == 2) ? '-'+allowanceAmount : allowanceAmount;
+    const newGoldAmount = (goldTypeId == 2) ? '-'+goldAmount : goldAmount;
 
     try {
       connection.query(
-        "INSERT INTO tbl_allowance(allowanceDateTime, allowanceTypeId, allowanceName, allowanceAmount, createdBy, createdAt) VALUES (?,?,?,?,?,?)",
-        [allowanceDateTime, allowanceTypeId, allowanceName, newAllowanceAmount, username, createdAt],
+        "INSERT INTO tbl_gold(goldDateTime, goldTypeId, goldName, goldAmount, createdBy, createdAt) VALUES (?,?,?,?,?,?)",
+        [goldDateTime, goldTypeId, goldName, newGoldAmount, username, createdAt],
         (err, results, fields) => {
           if (err) {
-            console.log("Error :: บันทึกข้อมูลเงินสวัสดิการล้มเหลว!", err);
+            console.log("Error :: บันทึกข้อมูลส่วนต่างราคาทองล้มเหลว!", err);
             return res.status(400).send();
           }
           return res
             .status(201)
-            .json({ status: 'success', message: "บันทึกข้อมูลเงินสวัสดิการเรียบร้อยแล้ว!" });
+            .json({ status: 'success', message: "บันทึกข้อมูลส่วนต่างราคาทองเรียบร้อยแล้ว!" });
         }
       );
     } catch (err) {
@@ -79,20 +78,20 @@ router.post("/", async (req, res) => {
   }
 );
 
-router.delete("/:allowanceId", async (req, res) => {
-  const allowanceId = req.params.allowanceId;
+router.delete("/:goldId", async (req, res) => {
+  const goldId = req.params.goldId;
   try {
     connection.query(
-      "DELETE FROM tbl_allowance WHERE allowanceId = ?",
-      [allowanceId],
+      "DELETE FROM tbl_gold WHERE goldId = ?",
+      [goldId],
       (err, results, fields) => {
         if (err) {
-          console.log("Error while deleting a allowance in database!", err);
+          console.log("Error while deleting a gold in database!", err);
           return res.status(400).send();
         }
         return res
           .status(200)
-          .json({ message: "The allowance is successfully deleted!" });
+          .json({ message: "The gold is successfully deleted!" });
       }
     );
   } catch (err) {

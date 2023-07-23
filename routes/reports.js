@@ -31,17 +31,44 @@ router.get("/", (req, res) => {
   }
 });
 
+router.get("/monthly/welfare/count-payment/:date", (req, res) => {
+  const date = req.params.date + '%'
+  console.log(date)
+  try {
+    const mysql =
+      "SELECT COUNT(*) AS TOTAL_MEMBER  "+  //total pending pay members
+      "FROM tbl_loan "+ 
+      "WHERE loanStatusId = 1   "+ 
+      "AND loanId NOT IN   "+ 
+      "( SELECT loanId FROM tbl_loan_payment WHERE loanPaymentMonth LIKE ?) "+
+      "UNION  "+ 
+      "SELECT COUNT(*) AS TOTAL_MEMBER "+ //total paid members
+      "FROM tbl_loan_payment "+ 
+      "WHERE loanPaymentMonth LIKE ? ";
+    connection.query(mysql, [date, date], (err, results, fields) => {
+      if (err) {
+        console.log(err);
+        return res.status(400).send();
+      }
+      res.status(200).json(results);
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
 router.get("/monthly/welfare/paid/:date", (req, res) => {
   const date = req.params.date + '%'
   console.log(date)
   try {
     const mysql =
-      "SELECT * "+
+      "SELECT *, lp.approvedBy AS paymentApprovedBy "+
       "FROM tbl_loan_payment lp "+
       "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = lp.paymentTypeId "+
       "LEFT JOIN tbl_loan l ON l.loanId = lp.loanId "+
       "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId "+
-      "WHERE createdAt LIKE ?";
+      "WHERE loanPaymentMonth LIKE ?";
     connection.query(mysql, [date], (err, results, fields) => {
       if (err) {
         console.log(err);
@@ -60,9 +87,18 @@ router.get("/monthly/welfare/pending-payment/:date", (req, res) => {
     console.log(date)
     try {
       const mysql =
-        "SELECT * "+
-        "FROM tbl_loan_payment lp "+
-        "WHERE createdAt LIKE ?";
+      "SELECT l.loanId, memberName, positionName, loanTypeName, loanAmount, l.nationalId, monthlyPayment  "+
+      "FROM tbl_loan l  "+
+      "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId  "+
+      "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId  "+
+      "LEFT JOIN tbl_loan_status ls ON ls.loanStatusId = l.loanStatusId  "+
+      "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId  "+
+      "LEFT JOIN tbl_position p ON p.positionId = m.positionId  "+
+      "LEFT JOIN tbl_loan_payment lp ON lp.loanId = l.loanId  "+
+      "WHERE l.loanStatusId = 1  "+
+      "AND l.loanId NOT IN  "+
+      "( SELECT loanId FROM tbl_loan_payment WHERE loanPaymentMonth LIKE ?) "+
+      "ORDER BY loanTypeName, loanAmount, memberName";
       connection.query(mysql, [date], (err, results, fields) => {
         if (err) {
           console.log(err);
@@ -98,24 +134,52 @@ router.get("/monthly/welfare/followup-payment/:date", (req, res) => {
 });
 
 router.get("/monthly/welfare/sum-payment/:date", (req, res) => {
-    const date = req.params.date + '%'
+    const date = req.params.date + '-28'
+    const yearMonth = req.params.date + '%'
     console.log(date)
     try {
       const mysql =
-        "SELECT SUM(paymentAmount) AS TOTAL_PAID, 0 AS TOTAL_PENDING_PAYMENT, 0 AS TOTAL_FOLLOWUP_PAYMENT, 0 AS TOTAL_PROFIT "+
+        "SELECT SUM(amount) AS TOTAL_BALANCE "+
+        "FROM tbl_loan   "+
+        "WHERE ? BETWEEN `startLoanDate` AND `endLoanDate` "+
+        "UNION "+
+        "SELECT SUM(paymentAmount) AS TOTAL_BALANCE "+ //paid balance
         "FROM tbl_loan_payment lp "+
         "WHERE lp.loanPaymentMonth LIKE ?";
-      connection.query(mysql, [date, date, date], (err, results, fields) => {
+      connection.query(mysql, [date, yearMonth], (err, results, fields) => {
         if (err) {
           console.log(err);
           return res.status(400).send();
         }
+        console.log(results)
         res.status(200).json(results);
       });
     } catch (err) {
       console.log(err);
       return res.status(500).send();
     }
+});
+
+router.get("/monthly/welfare/sum-pending-payment/:date", (req, res) => {
+  const date = req.params.date
+  console.log(date)
+  try {
+    const mysql =
+      "SELECT SUM(amount) AS TOTAL_PENDING_PAYMENT "+
+      "FROM tbl_loan  "+
+      "WHERE ? BETWEEN `startLoanDate` AND `endLoanDate`";
+    connection.query(mysql, [date], (err, results, fields) => {
+      if (err) {
+        console.log(err);
+        return res.status(400).send();
+      }
+      console.log(results)
+      res.status(200).json(results);
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
 });
 
 router.get("/yearly/welfare/summary/:year", (req, res) => {

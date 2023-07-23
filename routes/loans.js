@@ -266,6 +266,51 @@ router.get("/payment-suggestion/:loanId", async (req, res) => {
   }
 });
 
+router.get("/pending-payment/:yearmonth", (req, res) => {
+  const getYearMonth = req.params.yearmonth;
+  const currentYearMonth =  moment().format('YYYY-MM');
+  const yearmonth = !getYearMonth ? getYearMonth : currentYearMonth;
+  const strYearMonth = yearmonth+"%";
+
+  try {
+    const mysql =
+    "SELECT memberName, positionName, loanTypeName, loanAmount, nationalId "+
+    "FROM "+
+    "(SELECT memberName, positionName, loanTypeName, loanAmount, l.nationalId  "+
+    "FROM tbl_loan l  "+
+    "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId  "+
+    "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId  "+
+    "LEFT JOIN tbl_loan_status ls ON ls.loanStatusId = l.loanStatusId  "+
+    "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId  "+
+    "LEFT JOIN tbl_position p ON p.positionId = m.positionId  "+
+    "LEFT JOIN tbl_loan_payment lp ON lp.loanId = l.loanId  "+
+    "WHERE l.loanStatusId = 1  "+
+    "AND l.loanId NOT IN  "+
+    "( SELECT loanId FROM tbl_loan_payment WHERE loanPaymentMonth LIKE ?) "+
+    "UNION  "+
+    "SELECT memberName, positionName, 'หนี้อื่นๆ' AS loanTypeName,  "+
+    "(IF(houseRental IS NOT NULL, houseRental, 0)  +  "+
+    "IF(bankLoan IS NOT NULL, bankLoan, 0)  +  "+
+    "IF(studyLoan IS NOT NULL, studyLoan, 0)  +  "+
+    "IF(allowanceLoan IS NOT NULL, allowanceLoan, 0) ) AS loanAmount, nationalId "+
+    "FROM tbl_member m  "+
+    "LEFT JOIN tbl_position p ON p.positionId = m.positionId  "+
+    "WHERE isOtherLoan = 1 "+
+    ") AS x "+
+    "ORDER BY loanTypeName, memberName";
+    connection.query(mysql, strYearMonth, (err, results, fields) => {
+      if (err) {
+        console.log(err);
+        return res.status(400).send();
+      }
+      res.status(200).json(results);
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
 // post
 router.post("/", loanRequestDuplicateInfo, async (req, res) => {
     const { nationalId, loanTypeId, firstReferenceId, secondReferenceId, memberRoleId, userName, debtStatusId, debt1, debt2, debt3, debt4, debt5, debt6 } = req.body;
@@ -302,17 +347,18 @@ router.post("/", loanRequestDuplicateInfo, async (req, res) => {
 
 router.put("/:loanId", loanFeeInfo, async (req, res) => {
   const loanId = req.params.loanId;
-  const { approvedBy, loanStatusId, refId, loanTypeId, loanDurationInMonth, loanAmount } = req.body;
+  const { approvedBy, loanStatusId, refId, loanTypeId, loanDurationInMonth, loanAmount, debt1, debt2, debt3, debt4, debt5, debt6 } = req.body;
   const approvedAt =  moment().format('YYYY-MM-DD H:m:s');
   // const loanFee = (loanTypeId <= 2) ? 50 : null
   const loanFee = req.loanFee
-  const startLoanDate = moment().add(1, 'month').format('YYYY-MM-DD');
+  // const startLoanDate = moment().add(1, 'month').format('YYYY-MM-DD');
+  const startLoanDate = moment().format('YYYY-MM-DD');
   const endLoanDate = moment(startLoanDate).add(loanDurationInMonth - 1,'month').format('YYYY-MM-DD');
   const amount = loanAmount
   try {
     connection.query(
-      "UPDATE tbl_loan SET refId = ?, approvedBy = ?, approvedAt = ?, loanStatusId = ?, loanFee = ?, startLoanDate = ?, endLoanDate = ?, loanDuration = ?, amount = ? WHERE loanId = ? ",
-      [refId, approvedBy, approvedAt, loanStatusId, loanFee, startLoanDate, endLoanDate, loanDurationInMonth, loanAmount, loanId],
+      "UPDATE tbl_loan SET refId = ?, approvedBy = ?, approvedAt = ?, loanStatusId = ?, loanFee = ?, startLoanDate = ?, endLoanDate = ?, loanDuration = ?, amount = ?, debt1 = ?, debt2 = ?, debt3 = ?, debt4 = ?, debt5 = ?, debt6 = ? WHERE loanId = ? ",
+      [refId, approvedBy, approvedAt, loanStatusId, loanFee, startLoanDate, endLoanDate, loanDurationInMonth, loanAmount, debt1, debt2, debt3, debt4, debt5, debt6, loanId],
       (err, results, fields) => {
         if (err) {
           console.log("Error while updating loan approval in database!", err);

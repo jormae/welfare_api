@@ -154,4 +154,51 @@ router.get("/loan-month-range/:loanId", loanInfo, (req, res) => {
   }
 });
 
+router.get("/document", (req, res) => {
+  try {
+    const mysql =
+      "SELECT * FROM tbl_document ORDER BY documentId ";
+    connection.query(mysql, (err, results, fields) => {
+      if (err) {
+        console.log(err);
+        return res.status(400).send();
+      }
+      res.status(200).json(results);
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
+
+router.put("/other-loans/:nationalId", async (req, res) => {
+  const otherLoans  = req.body.otherLoans.toString();
+  const nationalId = req.params.nationalId
+  // const strOtherLoans = otherLoans.toString();
+
+  console.log('nationalId = '+nationalId)
+  console.log('otherLoans = '+otherLoans)
+  // console.log('strOtherLoans = '+strOtherLoans)
+
+  try {
+    connection.query(
+      "UPDATE tbl_member SET otherLoans = ? WHERE nationalId = ? ",
+      [otherLoans, nationalId],
+      (err, results, fields) => {
+        if (err) {
+          console.log("Error while updating a member in database!", err);
+          return res.status(400).send({status:'error', message: "Error while updating a member in database!" });
+        }
+        return res
+          .status(200)
+          .json({status:'success', message: "บันทึกข้อมูลรายการหนี้อื่นๆสำเร็จ!" });
+      }
+    );
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+
+});
+
 module.exports = router;
