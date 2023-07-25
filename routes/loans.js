@@ -176,16 +176,16 @@ router.get("/members/:nationalId", async (req, res) => {
   }
 });
 
-router.get("/loan-history/:nationalId/:loanId", async (req, res) => {
+router.get("/payment-history/:nationalId/:loanId", async (req, res) => {
   const nationalId = req.params.nationalId;
   const loanId = req.params.loanId;
   try {
     connection.query(
-      "SELECT monthNo, loanPaymentMonth, paymentAmount, paymentTypeName, lp.approvedAt, lp.approvedBy, loanStatusName, paymentFilePath  " +
-      "FROM tbl_loan_payment lp  "+
-      "LEFT JOIN tbl_loan l ON lp.loanId = l.loanId "+
-      "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = lp.paymentTypeId  " +
-      "LEFT JOIN tbl_loan_status s ON s.loanStatusId = l.loanStatusId "+
+      "SELECT l.loanId, monthNo, loanPaymentMonth, paymentAmount, paymentTypeName, lp.approvedAt, lp.approvedBy, paymentFilePath, isCloseLoanPayment, loanAmount "+
+      "FROM tbl_loan_payment lp   "+
+      "LEFT JOIN tbl_loan l ON lp.loanId = l.loanId  "+
+      "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId "+
+      "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = lp.paymentTypeId "+
       "WHERE nationalId = ? " +
       "AND l.loanId = ?",
       [nationalId, loanId],
@@ -194,6 +194,7 @@ router.get("/loan-history/:nationalId/:loanId", async (req, res) => {
           console.log(err);
           return res.status(400).send();
         }
+        // console.log(results)
         res.status(200).json(results);
       }
     );
@@ -241,13 +242,14 @@ router.get("/payment-suggestion/:loanId", async (req, res) => {
       // "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId "+
       // "WHERE loanStatusId = 1 "+
       // "AND l.nationalId = ?",
-      "SELECT loanId, loanTypeName, memberName, nationalId, refId, paymentTypeId, monthlyPayment, IF(monthNo IS NULL, 0, monthNo) + 1 AS monthNo "+
-      "FROM "+
-      "(SELECT l.loanId, loanTypeName, memberName, m.nationalId, refId, paymentTypeId, monthlyPayment, "+
-      "(SELECT MAX(monthNo) FROM tbl_loan_payment lp WHERE lp.loanId = l.loanId) AS monthNo "+
-      " FROM tbl_loan l "+
-      "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId "+
-      "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId  "+
+      "SELECT loanId, loanTypeName, memberName, nationalId, refId, paymentTypeId, monthlyPayment, IF(monthNo IS NULL, 0, monthNo) + 1 AS monthNo, loanAmount, totalLoanPayment, (loanAmount - IF(totalLoanPayment IS NULL, 0, totalLoanPayment)) AS totalLoanBalance "+
+      "FROM  "+
+      "(SELECT l.loanId, loanTypeName, memberName, m.nationalId, refId, paymentTypeId, monthlyPayment, loanAmount,  "+
+      "(SELECT MAX(monthNo) FROM tbl_loan_payment lp WHERE lp.loanId = l.loanId) AS monthNo,  "+
+      "(SELECT SUM(paymentAmount) FROM tbl_loan_payment lp WHERE lp.loanId = l.loanId) AS totalLoanPayment "+
+      "FROM tbl_loan l  "+
+      "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId  "+
+      "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId   "+
       "WHERE loanStatusId = 1 "+ 
       "AND l.loanId = ?"+
       ") AS x",
