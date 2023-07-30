@@ -63,6 +63,7 @@ router.get("/request", async (req, res) => {
     const mysql =
     "SELECT * "+ 
     "FROM tbl_investment i  "+
+    "LEFT JOIN tbl_investment_type it ON it.investmentTypeId = i.investmentTypeId "+
     "LEFT JOIN tbl_member m ON m.nationalId = i.nationalId  "+
     "LEFT JOIN tbl_investment_status s ON s.investmentStatusId = i.investmentStatusId "+
     "LEFT JOIN tbl_member_role mr ON mr.memberRoleId = m.memberRoleId " +

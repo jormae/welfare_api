@@ -125,4 +125,26 @@ router.get("/totalMember", (req, res) => {
   }
 });
 
+router.get("/count-request", (req, res) => {
+  try {
+    const mysql =
+      "SELECT COUNT(*) AS TOTAL_REQUEST  "+   //total loan request 
+      "FROM tbl_loan   "+
+      "WHERE loanStatusId = 0  "+   
+      "UNION    "+
+      "SELECT COUNT(*) AS TOTAL_REQUEST  "+ //total investment request 
+      "FROM tbl_investment   "+
+      "WHERE investmentStatusId = 0 ";
+    connection.query(mysql, (err, results, fields) => {
+      if (err) {
+        console.log(err);
+        return res.status(400).send();
+      }
+      res.status(200).json(results);
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send();
+  }
+});
 module.exports = router;

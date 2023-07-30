@@ -184,7 +184,7 @@ router.put("/:nationalId", async (req, res) => {
 
 router.put("/reset/:nationalId", async (req, res) => {
   const nationalId = req.params.nationalId;
-  const password  = req.params.nationalId;
+  const password  = "123456";
   console.log('password = '+password)
   try {
     bcrypt.hash(password, saltRounds, function (err, hash) {

@@ -22,6 +22,7 @@ router.get("/", (req, res) => {
     "LEFT JOIN tbl_position p ON p.positionId = m.positionId  "+
     "LEFT JOIN tbl_spouse s ON s.memberNationalId = m.nationalId "+ 
     "LEFT JOIN tbl_investment i ON i.nationalId = m.nationalId  "+
+    "LEFT JOIN tbl_member_status ms ON ms.memberStatusId = m.memberStatusId "+
     "GROUP BY m.nationalId  "+
     "ORDER BY memberName";
     connection.query(

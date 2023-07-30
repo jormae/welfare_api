@@ -40,9 +40,9 @@ router.get("/", (req, res) => {
 router.get("/active", (req, res) => {
   try {
     const mysql =
-    "SELECT approvedAt, memberName, positionName, memberTypeName, loanTypeName, loanAmount, loanStatusName, loanDurationInMonth, monthlyPayment, (loanAmount - (if(loanBalance IS NOT NULL, loanBalance, 0))) AS loanBalance, loanId, nationalId "+
+    "SELECT approvedAt, memberName, positionName, memberTypeName, loanTypeName, loanAmount, loanStatusName, loanDurationInMonth, monthlyPayment, (loanAmount - (if(loanBalance IS NOT NULL, loanBalance, 0))) AS loanBalance, loanId, nationalId, startLoanDate, endLoanDate "+
     "FROM"+
-    "(SELECT l.approvedAt, memberName, positionName, memberTypeName, loanTypeName, loanAmount, loanStatusName, loanDurationInMonth, monthlyPayment, l.loanId, l.nationalId, "+
+    "(SELECT l.approvedAt, memberName, positionName, memberTypeName, loanTypeName, loanAmount, loanStatusName, loanDurationInMonth, monthlyPayment, l.loanId, l.nationalId, startLoanDate, endLoanDate,  "+
     "(SELECT SUM(paymentAmount) FROM tbl_loan_payment lp WHERE lp.loanId = l.loanId) AS loanBalance "+
     "FROM tbl_loan l "+
     "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId "+
@@ -50,7 +50,8 @@ router.get("/active", (req, res) => {
     "LEFT JOIN tbl_loan_status ls ON ls.loanStatusId = l.loanStatusId "+
     "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId "+
     "LEFT JOIN tbl_position p ON p.positionId = m.positionId "+
-    "WHERE l.loanStatusId = 1 ) AS x";
+    "WHERE l.loanStatusId = 1 "+
+    "AND closeLoanStatusId <> 3) AS x";
     connection.query(mysql, (err, results, fields) => {
       if (err) {
         console.log(err);

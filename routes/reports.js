@@ -67,6 +67,7 @@ router.get("/monthly/welfare/paid/:date", (req, res) => {
       "FROM tbl_loan_payment lp "+
       "LEFT JOIN tbl_payment_type pt ON pt.paymentTypeId = lp.paymentTypeId "+
       "LEFT JOIN tbl_loan l ON l.loanId = lp.loanId "+
+      "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId "+
       "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId "+
       "WHERE loanPaymentMonth LIKE ?";
     connection.query(mysql, [date], (err, results, fields) => {
@@ -87,18 +88,22 @@ router.get("/monthly/welfare/pending-payment/:date", (req, res) => {
     console.log(date)
     try {
       const mysql =
-      "SELECT l.loanId, memberName, positionName, loanTypeName, loanAmount, l.nationalId, monthlyPayment  "+
-      "FROM tbl_loan l  "+
-      "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId  "+
-      "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId  "+
-      "LEFT JOIN tbl_loan_status ls ON ls.loanStatusId = l.loanStatusId  "+
-      "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId  "+
-      "LEFT JOIN tbl_position p ON p.positionId = m.positionId  "+
-      "LEFT JOIN tbl_loan_payment lp ON lp.loanId = l.loanId  "+
-      "WHERE l.loanStatusId = 1  "+
-      "AND l.loanId NOT IN  "+
-      "( SELECT loanId FROM tbl_loan_payment WHERE loanPaymentMonth LIKE ?) "+
-      "ORDER BY loanTypeName, loanAmount, memberName";
+     " SELECT approvedAt, memberName, positionName, memberTypeName, loanTypeName, loanAmount, loanStatusName, loanDurationInMonth, monthlyPayment, (loanAmount - (if(loanBalance IS NOT NULL, loanBalance, 0))) AS loanBalance, loanId, nationalId, startLoanDate, endLoanDate, (if(monthNo IS NOT NULL, monthNo, 0)+1) AS monthNo "+
+     "FROM  "+
+     "(SELECT l.approvedAt, memberName, positionName, memberTypeName, loanTypeName, loanAmount, loanStatusName, loanDurationInMonth, monthlyPayment, l.loanId, l.nationalId, startLoanDate, endLoanDate, (SELECT SUM(paymentAmount) FROM tbl_loan_payment lp WHERE lp.loanId = l.loanId) AS loanBalance, (SELECT MAX(monthNo) FROM tbl_loan_payment lp1 WHERE lp1.loanId = l.loanId) AS monthNo "+      
+     "FROM tbl_loan l   "+
+     "LEFT JOIN tbl_member m ON m.nationalId = l.nationalId   "+
+     "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId   "+
+     "LEFT JOIN tbl_loan_status ls ON ls.loanStatusId = l.loanStatusId   "+
+     "LEFT JOIN tbl_member_type mt ON mt.memberTypeId = m.memberTypeId  "+ 
+     "LEFT JOIN tbl_position p ON p.positionId = m.positionId  "+ 
+     "LEFT JOIN tbl_loan_payment lp ON lp.loanId = l.loanId  "+ 
+     "WHERE l.loanStatusId = 1  "+ 
+     "AND l.loanId NOT IN  "+ 
+     "( SELECT loanId FROM tbl_loan_payment WHERE loanPaymentMonth LIKE ?)  "+
+     "GROUP BY l.loanId  "+
+     ") AS x  "+
+     "ORDER BY loanTypeName, loanAmount, memberName";
       connection.query(mysql, [date], (err, results, fields) => {
         if (err) {
           console.log(err);
