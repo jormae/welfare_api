@@ -12,11 +12,12 @@ const loanRequestDuplicateInfo = function (req, res, next) {
         try {
           connection.query(
             "SELECT COUNT(*) AS totalLoan "+ 
-            "FROM tbl_loan l "+
-            "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId "+
-            "WHERE loanStatusId IN ( 0,1) "+
+            "FROM tbl_loan l  "+
+            "LEFT JOIN tbl_loan_type lt ON lt.loanTypeId = l.loanTypeId  "+
+            "WHERE closeLoanStatusId <> 3 "+
+            "AND loanStatusId <> 2 "+
             "AND nationalId = ? "+
-            "AND loanCategoryId IN (SELECT loanCategoryId FROM tbl_loan_type WHERE loanTypeId = ?) ", [nationalId, loanTypeId],
+            "AND loanMainTypeId IN (SELECT loanMainTypeId FROM tbl_loan_type WHERE loanTypeId = ?)", [nationalId, loanTypeId],
             (err, results, fields) => {
               if (err) {
                 console.log(err);
